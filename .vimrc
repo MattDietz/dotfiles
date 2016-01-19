@@ -231,6 +231,16 @@ function! Tabstyle_PEP8()
   let w:m2=matchadd('LineOverflow', '\%>120v.\+', -1)
 endfunction
 
+function! Tabstyle_Glob()
+  set softtabstop=2
+  set shiftwidth=2
+  set tabstop=2
+  set expandtab
+  let w:m1=matchadd('LineProximity', '\%<121v.\%>80v', -1)
+  let w:m2=matchadd('LineOverflow', '\%>120v.\+', -1)
+endfunction
+
+autocmd FileType * call Tabstyle_Glob()
 autocmd Filetype python call Tabstyle_PEP8()
 
 """ Omni Completion
@@ -253,7 +263,7 @@ set statusline+=%{SyntasticStatuslineFlag()}
 set statusline+=%*
 let g:syntastic_python_checker_args='--builtins=_'
 let g:syntastic_always_populate_loc_list = 0
-let g:syntastic_auto_loc_list = 1
+let g:syntastic_auto_loc_list = 0
 let g:syntastic_check_on_open = 1
 let g:syntastic_check_on_wq = 0
 let g:syntastic_auto_jump = 0
