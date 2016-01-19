@@ -264,6 +264,8 @@ hi link LineOverflow Special
 
 """ Neocomplete config
 """ This is really slow. Need to decide how I feel about this
+""" This requires vim with lua installed:
+""" On mac: brew install vim --with-lua
 let g:acp_enableAtStartup = 0
 let g:neocomplete#enable_at_startup = 1
 let g:neocomplete#enable_smart_case = 1
