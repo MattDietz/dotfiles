@@ -225,7 +225,8 @@ function! Tabstyle_PEP8()
   set shiftwidth=4
   set tabstop=4
   set expandtab
-  set colorcolumn=80
+  """ All I really want is the highlighting, not the obnoxious red line
+  """ set colorcolumn=80
 
   let w:m1=matchadd('LineProximity', '\%<121v.\%>80v', -1)
   let w:m2=matchadd('LineOverflow', '\%>120v.\+', -1)
