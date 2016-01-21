@@ -226,7 +226,7 @@ function! Tabstyle_PEP8()
   set tabstop=4
   set expandtab
   """ All I really want is the highlighting, not the obnoxious red line
-  """ set colorcolumn=80
+  set colorcolumn=80
 
   let w:m1=matchadd('LineProximity', '\%<121v.\%>80v', -1)
   let w:m2=matchadd('LineOverflow', '\%>120v.\+', -1)
@@ -287,5 +287,5 @@ inoremap <expr><TAB>  pumvisible() ? "\<C-n>" : "\<TAB>"
 
 """ Airline config
 let g:airline_powerline_fonts = 1
-let g:airline_theme="luna"
+let g:airline_theme="luna_alt"
 let g:airline#extensions#syntastic#enabled = 0
