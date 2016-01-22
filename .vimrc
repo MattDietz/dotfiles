@@ -20,11 +20,6 @@ syntax on
 """ Allow vim to backspace over characters added in previous insert sessions
 set backspace=indent,eol,start
 
-""" Don't use real tabs!!!
-set expandtab
-set shiftwidth=2
-set tabstop=2
-
 """ Turns on line wrapping
 set wrap
 
@@ -89,9 +84,6 @@ set ruler
 
 """ Resize all windows to keep them the same size when splitting
 set equalalways
-
-""" When deleting a softtab, delete a shiftwidth number of spaces
-set smarttab
 
 """ Highlights the line containing the cursor
 set cursorline
@@ -203,12 +195,6 @@ nnoremap <leader>DP :exe ":profile pause"<cr>
 nnoremap <leader>DC :exe ":profile continue"<cr>
 nnoremap <leader>DQ :exe ":profile pause"<cr>:noautocmd qall!<cr>
 
-au BufRead, BufNewFile *.rb, *.rhtml set shiftwidth=2
-au BufRead, BufNewFile *.rb, *.rhtml set softtabstop=2
-
-au BufRead, BufNewFile *.py set shiftwidth=4
-au BufRead, BufNewFile *.py set softtabstop=4
-
 """ Filetype specifics
 colorscheme ir_black
 
@@ -221,28 +207,23 @@ highlight ExtraWhitespace ctermbg=red guibg=red
 match ExtraWhitespace /\s\+$/
 
 function! Tabstyle_PEP8()
-  set softtabstop=4
-  set shiftwidth=4
-  set tabstop=4
-  set expandtab
-  """ All I really want is the highlighting, not the obnoxious red line
   set colorcolumn=80
-
   let w:m1=matchadd('LineProximity', '\%<121v.\%>80v', -1)
   let w:m2=matchadd('LineOverflow', '\%>120v.\+', -1)
 endfunction
 
-function! Tabstyle_Glob()
-  set softtabstop=2
-  set shiftwidth=2
-  set tabstop=2
-  set expandtab
-  let w:m1=matchadd('LineProximity', '\%<121v.\%>80v', -1)
-  let w:m2=matchadd('LineOverflow', '\%>120v.\+', -1)
-endfunction
-
-autocmd FileType * call Tabstyle_Glob()
+""" Add a couple things if the filetype is Python
 autocmd Filetype python call Tabstyle_PEP8()
+
+""" Never use tabs
+set softtabstop=2
+set shiftwidth=2
+set tabstop=2
+set expandtab
+"
+""" When deleting a softtab, delete a shiftwidth number of spaces
+set smarttab
+
 
 """ Omni Completion
 autocmd FileType html :set omnifunc=htmlcomplete#CompleteTags
