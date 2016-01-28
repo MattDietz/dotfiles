@@ -170,7 +170,7 @@ fun GenCTags()
     echo "not a git or bzr repo"
     return 0
   endif
-  let result = system('ctags --exclude=*git* --exclude=*tox* -R -f ' . path . '/tags ' . path)
+  let result = system('cd `git rev-parse --show-toplevel` && ctags --exclude=*git* --exclude=*tox* -R -f ' . path . '/tags ' . path)
   echo "Generated tags completed. Tags file placed in " . path
 endfun
 
@@ -234,6 +234,7 @@ autocmd FileType css set omnifunc=csscomplete#CompleteCSS
 autocmd FileType xml set omnifunc=xmlcomplete#CompleteTags
 autocmd FileType php set omnifunc=phpcomplete#CompletePHP
 autocmd FileType c set omnifunc=ccomplete#Complete
+autocmd CompleteDone * pclose
 
 """ Show file path and coords
 set statusline=%1*%f%*(%04l,%04v,%P/%L)%y
