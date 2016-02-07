@@ -44,4 +44,15 @@ git_prompt
 
 [[ -s "$HOME/.rvm/scripts/rvm" ]] && . "$HOME/.rvm/scripts/rvm"
 
+ALIASES=~/.aliases
+if [ -e $ALIASES ]; then
+  . $ALIASES
+fi
+
 alias ack='ack --color --group --column'
+DISTRO=$(uname)
+if [[ $DISTRO == "Darwin" ]]; then
+  alias ls="ls -G"
+elif [[ $DISTRO == "Linux" ]]; then
+  alias ls="ls --color"
+fi
