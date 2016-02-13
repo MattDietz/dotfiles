@@ -1,8 +1,10 @@
 """ Make sure vundle is being used
 set rtp+=~/.vim/bundle/Vundle.vim
 call vundle#begin()
+""" run ":PluginInstall" to install everything defined here
 Plugin 'VundleVim/Vundle.vim'
 Plugin 'vim-airline/vim-airline'
+Plugin 'fatih/vim-go'
 call vundle#end()
 
 """ Get out of vi-compatible mode (I'm not sure what this does)
@@ -275,3 +277,13 @@ let g:airline#extensions#tabline#enabled = 1
 let g:airline#extensions#tabline#show_buffers = 0
 let g:airline#extensions#tabline#show_tabs = 1
 let g:airline#extensions#tabline#formatter = "default"
+
+""" vim-go settings
+let g:go_highlight_functions = 1
+let g:go_highlight_methods = 1
+let g:go_highlight_structs = 1
+let g:go_highlight_interfaces = 1
+let g:go_highlight_operators = 1
+let g:go_highlight_build_constraints = 1
+""" Sets the "old" syntax highlighting engine for vim-go: https://github.com/fatih/vim-go/issues/72
+set re=1
