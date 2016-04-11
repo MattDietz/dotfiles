@@ -56,3 +56,8 @@ if [[ $DISTRO == "Darwin" ]]; then
 elif [[ $DISTRO == "Linux" ]]; then
   alias ls="ls --color"
 fi
+
+export HISTCONTROL=ignoreboth
+export HISTSIZE=5000
+export HISTIGNORE="ls:[bf]g:exit:history"
+shopt -s histappend
