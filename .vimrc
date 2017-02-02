@@ -219,7 +219,8 @@ endfunction
 autocmd Filetype python call Tabstyle_PEP8()
 
 """ Never use tabs
-set softtabstop=2
+""" I think this setting is breaking pasting into Vim, resetting spaces back to tabs
+""" set softtabstop=2
 set shiftwidth=2
 set tabstop=2
 set expandtab
