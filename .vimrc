@@ -209,7 +209,8 @@ highlight ExtraWhitespace ctermbg=red guibg=red
 match ExtraWhitespace /\s\+$/
 
 function! Tabstyle_PEP8()
-  set colorcolumn=80
+  """ Turns on a highlight column at column 80.
+  """ set colorcolumn=80
   let w:m1=matchadd('LineProximity', '\%<121v.\%>80v', -1)
   let w:m2=matchadd('LineOverflow', '\%>120v.\+', -1)
 endfunction
@@ -218,7 +219,8 @@ endfunction
 autocmd Filetype python call Tabstyle_PEP8()
 
 """ Never use tabs
-set softtabstop=2
+""" I think this setting is breaking pasting into Vim, resetting spaces back to tabs
+""" set softtabstop=2
 set shiftwidth=2
 set tabstop=2
 set expandtab
