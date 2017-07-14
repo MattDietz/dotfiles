@@ -19,12 +19,6 @@ call pathogen#infect()
 """ Turn on coloring
 syntax on
 
-""" Language specifid settings
-""" autocmd Filetype c      call languagestyles#C()
-""" autocmd Filetype go     call languagestyles#Go()
-""" autocmd Filetype vim    call languagestyles#Vimscript()
-""" autocmd Filetype python call languagestyles#Python()
-
 """ Allow vim to backspace over characters added in previous insert sessions
 set backspace=indent,eol,start
 
@@ -178,9 +172,7 @@ fun GenCTags()
     echo "not a git or bzr repo"
     return 0
   endif
-  let exec_str = 'cd ' . path . ' && ctags --exclude=*git* --exclude=*tox* -R -f ' . path . '/tags ' . path
-  let result = system(exec_str)
-  echo result
+  let result = system('cd `git rev-parse --show-toplevel` && ctags --exclude=*git* --exclude=*tox* -R -f ' . path . '/tags ' . path)
   echo "Generated tags completed. Tags file placed in " . path
 endfun
 
@@ -191,11 +183,9 @@ nnoremap <silent> <F2> :call GenCTags()<cr>
 
 """ Opens the tag under the cursor in a vsplit
 nnoremap <F4> :vsp <cr>:exec("tag ".expand("<cword>"))<cr>
-nnoremap <silent><Leader><C-[> nnoremap <silent><Leader><C-]> <C-w><C-]><C-w>T
 
 """ Opens the tag under the cursor in a horizontal split
 nnoremap <F5> :split <cr>:exec("tag ".expand("<cword>"))<cr>
-nmap <F8> :TagbarToggle<CR>
 
 """ Mapping for the tags list plugin. You need exuberant ctags installed for
 """ this one!
@@ -208,7 +198,7 @@ nnoremap <leader>DC :exe ":profile continue"<cr>
 nnoremap <leader>DQ :exe ":profile pause"<cr>:noautocmd qall!<cr>
 
 """ Filetype specifics
-colorscheme onedark
+colorscheme ir_black
 
 """ Plugins
 filetype plugin on
@@ -218,11 +208,10 @@ autocmd ColorScheme * highlight ExtraWhitespace ctermbg=red guibg=red
 highlight ExtraWhitespace ctermbg=red guibg=red
 match ExtraWhitespace /\s\+$/
 
-""" NOTE: This is what highlights after column 80, if enabled
 function! Tabstyle_PEP8()
   """ Turns on a highlight column at column 80.
   """ set colorcolumn=80
-  let w:m1=matchadd('LineProximity', '\%<121v.\%>120v', -1)
+  let w:m1=matchadd('LineProximity', '\%<121v.\%>80v', -1)
   let w:m2=matchadd('LineOverflow', '\%>120v.\+', -1)
 endfunction
 
@@ -259,13 +248,13 @@ set laststatus=2
 set statusline+=%#warningmsg#
 set statusline+=%{SyntasticStatuslineFlag()}
 set statusline+=%*
-"""let g:syntastic_python_checker_args='--builtins=_'
-"""let g:syntastic_always_populate_loc_list = 0
-"""let g:syntastic_auto_loc_list = 0
-"""let g:syntastic_check_on_open = 1
-"""let g:syntastic_check_on_wq = 0
-"""let g:syntastic_auto_jump = 0
-"""let g:syntastic_ignore_files = ['\m^/usr/include/', '\m\c\.h$', '.tox/', '.pip/', '.venv']
+let g:syntastic_python_checker_args='--builtins=_'
+let g:syntastic_always_populate_loc_list = 0
+let g:syntastic_auto_loc_list = 0
+let g:syntastic_check_on_open = 1
+let g:syntastic_check_on_wq = 0
+let g:syntastic_auto_jump = 0
+let g:syntastic_ignore_files = ['\m^/usr/include/', '\m\c\.h$', '.tox/', '.pip/', '.venv']
 
 hi link LineProximity FoldColumn
 hi link LineOverflow Special
@@ -300,32 +289,3 @@ let g:go_highlight_operators = 1
 let g:go_highlight_build_constraints = 1
 """ Sets the "old" syntax highlighting engine for vim-go: https://github.com/fatih/vim-go/issues/72
 set re=1
-
-""" Vim-go settings
-let g:tagbar_type_go = {
-	\ 'ctagstype' : 'go',
-	\ 'kinds'     : [
-		\ 'p:package',
-		\ 'i:imports:1',
-		\ 'c:constants',
-		\ 'v:variables',
-		\ 't:types',
-		\ 'n:interfaces',
-		\ 'w:fields',
-		\ 'e:embedded',
-		\ 'm:methods',
-		\ 'r:constructor',
-		\ 'f:functions'
-	\ ],
-	\ 'sro' : '.',
-	\ 'kind2scope' : {
-		\ 't' : 'ctype',
-		\ 'n' : 'ntype'
-	\ },
-	\ 'scope2kind' : {
-		\ 'ctype' : 't',
-		\ 'ntype' : 'n'
-	\ },
-	\ 'ctagsbin'  : 'gotags',
-	\ 'ctagsargs' : '-sort -silent'
-\ }

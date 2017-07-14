@@ -1,0 +1,10 @@
+log-dhcp
+keep-in-foreground
+log-facility=-
+{% for host in hosts %}
+{%     if hasattr(host, "roles") and "node" in host.roles %}
+dhcp-host={{ host.host_mac }},{{ host.host_ip }}
+{%     endif %}
+{% endfor %}
+dhcp-range=10.23.221.32,10.23.221.45
+dhcp-ignore=tag:!known

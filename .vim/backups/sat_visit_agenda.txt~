@@ -1,0 +1,71 @@
+Pieces:
+oz - Configuration Wizard Service
+Westfalia - Message Bus
+Keymaster - Entitlement
+Bootshop - IPXE
+Grant - Salesforce Consumer
+Unnamed IDM piece
+Unnamed ops CLI
+Datastore
+CI and Integration test suite
+
+Goals:
+Identify as much as possible for MVP and get as much forward looking work detailed as we can
+Identify as many components as possible that can be built for the long haul rather than throwing them away
+Talk about deployment of our services with the intention of live updating and any database/schema migrations in mind
+Discuss whether or not the message bus is needed for the short term
+How do we build each of these services with authn and authz in mind?
+Whiteboard enough stuff to produce flow charts for MVP and post-MVP work in as many things as possible
+
+
+
+Brief Agenda:
+Talk about MVP obligations:
+  Consumes registrations from Salesforce
+  Generates all-or-nothing entitlements
+  Generates IPXE scripts which links to the correct image and embeds the entitlements
+  Config Wizard Accepts data from portal
+  Emails sent to ops to do manual things
+  Emails sent to customers with link to pre-build survey
+
+MVP Entitlement
+Future Keymaster
+MVP Config Wizard
+  * Validate customer entered data POST'd from portal
+  * Sends email to ops to do things
+  * Probably also sends the link to the customer survey
+  * Must agree with registration data on user account management, and implement some portion of that for MVP
+Future Oz
+MVP IPXE
+Future Bootshop
+MVP Salesforce consumer
+Future Grant
+MVP Ops CLI
+  * This is a consumer of every Celestial API we expose and thus should be able to support *every* resource on *every* endpoint. Ideally it will dogfood the clients our workflow uses
+CI and Integration Testing Suite
+Future Ops CLI
+Future IDM
+
+
+Open Questions and considerations:
+
+* If we don't do message bus, how do we integrate those services together?
+  * What does the calling pattern look like if we don't? Who calls who?
+  * Who's responsible for handling the failure of an individual component?
+* How do we build this to scale without painting ourselves into a corner:
+  * Example -> pretend each of the services have been built synchronously with REST APIs. We have a workflow component that knows how to leverage tools to orchestrate them.
+    Now we want to add another node to the Grant service:
+      * How do we inform any Ops CLI that there's another node within a service to call?
+      * How do we inform the workflow engine there's another node within a service to call?
+        * some thoughts:
+          * Add a load balancer inside each of the services for things that have a REST API
+          * Add a service catalog to the IDM component, track the nodes in a datastore, and the list has to be fetched and round-robined/randomized
+          * Probably both load balancer and a service catalog
+* How do we port data from MVP for account management?
+
+Explicit goals:
+[12:30:07]  <_0x44>	I'd like it to be 50% tactical "how do we get our obligations done" and 50% strategic
+[12:30:18]  <_0x44>	"What are the decisions we need to make to not fuck us down the road"
+[12:30:52]  <_0x44>	And 50% teaching Susan to ask questions of her team instead of coming to me repeatedly
+
+Forrest wants direction for the next 3+ sprints

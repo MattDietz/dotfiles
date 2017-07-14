@@ -1,0 +1,2 @@
+~/token.sh; pbpaste | ssh tunnel 'sudo vpnc-connect'
+ssh tunnel -D 9876

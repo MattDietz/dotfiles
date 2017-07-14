@@ -1,0 +1,20 @@
+Nova filter scheduler
+==================================
+
+Notes:
+* Nova differentiates between Host and Cell filters. We'll want to consider something similar for our engine.
+* Relies on a configurable list of filters that are defined by the operator. All Host filters implement a host_passes(self, host_state, spec_obj) method, while Cell filters implement filter_all(cells, filter_properties)
+
+
+Pros:
+* Mostly a composition pattern, which makes it easy to extend functionality within the constraints
+* Lots of reference filters and other properties we may not have considered otherwise. Definitely useful for research
+
+Cons:
+* This will be common across most if not all the schedulers, but it's a single point of failure. Only one scheduler may operate at a time at a given tier.
+* Some resource constraints are hard coded into the main path (numa, pci_requests meta)
+* Some filters are really collections of multiple sub-filters, and they all take only the current state of the physical machine into account.
+
+
+
+

@@ -1,0 +1,82 @@
+# Makefile
+
+include envfile
+
+
+PYTHON_BIN := python2
+SHELL := /bin/bash
+CONTAINER_PATH := ${TRANQUILITY_REGISTRY}/${TRANQUILITY_NAMESPACE}/tranquility:${TRANQUILITY_VERSION}
+
+help: # Display help
+	@awk -F ':|##' \
+		'/^[^\t].+?:.*?##/ {\
+			printf "\033[36m%-30s\033[0m %s\n", $$1, $$NF \
+		}' $(MAKEFILE_LIST) | sort
+
+venv/bin/activate: setup.py setup.cfg setup-requirements.txt requirements.txt test-requirements.txt
+	$(RM) -rf venv
+	virtualenv -p $(PYTHON_BIN) venv
+	. venv/bin/activate && pip install -r setup-requirements.txt && pip install -r requirements.txt -r test-requirements.txt
+	./venv/bin/python setup.py develop
+
+venv: venv/bin/activate ## Build virtual environment
+
+check-format: venv/bin/activate ## Check code format
+	@{ \
+	set -euo pipefail ;\
+	DIFF=`venv/bin/yapf -d -r setup.py tranquility tests` ;\
+	if [ -n "$$DIFF" ] ;\
+	then \
+	echo -e "\nFormatting changes requested:\n" ;\
+	echo "$$DIFF" ;\
+	echo -e "\nRun 'make format' to automatically make changes.\n" ;\
+	exit 1 ;\
+	fi ;\
+	}
+
+format: venv/bin/activate ## Format code
+	venv/bin/yapf -i -r setup.py tranquility tests
+
+pylint: venv/bin/activate ## Run pylint
+	venv/bin/pylint --output-format=parseable --rcfile .pylintrc tranquility/ tests/ setup.py
+
+check: check-format pylint ## Check code format & lint
+
+test: venv/bin/activate ## Run unit tests
+	venv/bin/pytest --cov-config .coveragerc --verbose --cov-report term-missing --cov-report xml --cov=tranquility tests
+
+build: venv/bin/activate ## Create sdist and wheel packages
+	. venv/bin/activate && python setup.py sdist
+	. venv/bin/activate && python setup.py bdist_wheel
+
+clean: ## Delete all generated artifacts
+	$(RM) -rf venv build dist *.egg-info .cache .coverage .eggs .tox
+	find . -type f -name "*.pyc" -delete
+
+start_compose:
+	@docker-compose up -d
+	@echo "Run 'make compose_logs' to see compose log output"
+
+stop_compose:
+	@docker-compose stop
+	@docker-compose rm -f
+
+reset_tranquility:
+	@docker-compose stop tranquility_web_1; \
+	docker-compose rm -f tranquility_web_1; \
+	docker-compose up -d
+
+compose_logs:
+	docker-compose logs -f
+
+build-container: venv/bin/activate
+	@. venv/bin/activate && docker build --no-cache -t "${CONTAINER_PATH}" .
+
+push-container: venv/bin/activate
+	@. venv/bin/activate && docker push "${CONTAINER_PATH}"
+
+clean-container: venv/bin/activate
+	@. venv/bin/activate && docker rmi "${CONTAINER_PATH}"
+
+
+.PHONY: help check-format format pylint check test sdist wheel clean build build-container push-container clean-container

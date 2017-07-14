@@ -1,0 +1,32 @@
+FROM registry.access.redhat.com/rhel7-atomic
+MAINTAINER harmony-baremetal@cisco.com
+USER root
+
+# install required RPM packages
+COPY docker/RPM-GPG-KEY-EPEL-7 /etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-7
+COPY docker/redhat.repo /etc/yum.repos.d/sparta-redhat.repo
+RUN microdnf install gcc python2-pip python-devel genisoimage openssl-devel \
+                     p7zip-plugins git httpd mod_wsgi vim-enhanced && \
+    microdnf clean all
+
+# copy in isoservice code and install python dependencies
+COPY . /isoservice
+COPY docker/mime.types /etc/httpd/conf/
+WORKDIR /isoservice
+RUN rm -rf /isoservice/isoservice/isoservice.db && \
+    rm -rf /etc/httpd/conf.d/* && \
+    cp docker/isoservice.conf /etc/httpd/conf.d/isoservice.conf && \
+    pip install -U pip && \
+    pip install -r requirements/production.txt
+
+ENV DJANGO_CONFIGURATION=Production \
+    APACHE_SERVER_NAME=isoservice.localhost.localdomain \
+    # base url to pull base atomic iso from
+    ATOMIC_ISO_URL="http://pulp.ci.dfj.io/pulp/isos/harmony/images/" \
+    # the filename to pull from above URL
+    ATOMIC_ISO_FILE="rhel-atomic-installer-7.3.3-1.x86_64.iso" \
+    # where in the container will the above ISO be stored and subsequently
+    # used by isoservice
+    SPARTA_BASE_ISO=/opt/sparta/rhel-atomic-base.iso
+EXPOSE 80
+ENTRYPOINT ["/isoservice/docker/entrypoint-prod.sh"]

@@ -1,0 +1,5 @@
+KUBELET_ADDRESS="--address=0.0.0.0"
+KUBELET_API_SERVER="--api-servers=http://{{ hosts[0].host_ip }}:6443"
+KUBELET_POD_INFRA_CONTAINER="--pod-infra-container-image={% if docker.insecure_registry %}{{ docker.insecure_registry }}/{% endif %}rhel7/pod-infrastructure:latest"
+KUBELET_HOSTNAME="--hostname-override=FOO"
+KUBELET_ARGS="--cluster-dns={{ global.cluster_dns }} --cluster-domain={{ global.cluster_domain }}  --kubeconfig=/etc/kubernetes/kubelet.kubeconfig"

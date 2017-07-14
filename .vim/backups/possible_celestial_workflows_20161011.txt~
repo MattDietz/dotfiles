@@ -1,0 +1,74 @@
+MMVP
+=======================================
+Complete the opscli:
+  All children of AZs need to be completed
+Ship eternity with Oz complete on a single VM without Grant
+Implement infoblox API client to fetch MCP1 network config
+Figure out how to do CNTRL1 deployments
+
+MMVP Flow:
+
+Ops fills out infoblox as appropriate
+Ops creates a customer via the CLI
+Ops creates customer user credentials via the CLI
+Ops create the AZ via the CLI
+Ops completes customer survey via the CLI
+  # Glossing over many steps here
+Ops uses the client to POST create an IPXE ISO which:
+    Fetches Oz data
+    Fetches Infoblox data
+    Spins cloudinit templates
+    Builds IPXE ISO
+    Writes it onto the local file system
+    Eternity returns a URL pointing to the local filesystem ISO
+Ops uses the client to fetch the ISO
+Ops burns the ISO to USB
+Ops plugs in the USB and boots from it
+There should be no additional pre-boot configuration or use of a KVM console
+
+
+Pros:
+
+Ops is happier sooner
+
+Cons:
+
+We potentially ship without any entitlement information
+None of this information is guaranteed to be in SFDC later
+
+
+
+MVP
+========================================
+Complete the opscli
+  All children of the AZs need to be completed
+Ship eternity complete across 4 VMs
+Implement Infoblox API client to fetch MCP1 network config
+Figure out how to do CNTRL1 deployments
+
+MVP Flow:
+Customer contacts sales and buys an AZ
+Sales enters data into salesforce
+Grant picks up salesforce record and:
+   Tells Oz about it, conditionally creating a customer if none exists and then creating an AZ record
+   Tells Scathan about it, creating all entitlements info for the AZ created in OZ
+   Tells Eternity to email the customer at the technical contact email address SFDC record (Emailing will be disabled until Ops signs off)
+Customer receives the email and conditionally creates their credentials, or logs in with existing ones
+Customer fills out the survey
+  # Glossing over many steps here
+Customer hits "submit" on the survey review screen
+Eternity emails a deployment team email address we've configured 
+Ops fills out information in infoblox as appropriate
+Ops POST creates an ISO using the client, which:
+  # Is there a wireframe UI here?
+    Fetches Oz data
+    Fetches Infoblox data
+    Spins cloudinit templates
+    Builds IPXE ISO
+    eternity uploads to the Candyshop VM
+    Eternity returns a URL pointing to the Candyshop VM ISO
+Ops fetches the ISO using the returned URL in the previous step
+Ops burns the ISO to USB
+Ops plugs in the USB and boots from it
+There should be no additional pre-boot configuration or use of a KVM console
+

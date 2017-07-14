@@ -1,0 +1,251 @@
+---
+# Here is an ascii diagram that matches
+# up to the example topology yaml
+# definition in this file.
+#
+# mgmt net: 2.3.4.1/24 ----------|storage net: 2.4.4.1/24 |
+#                                |                        |
+# ---------  AA:BB:CC:DD:EE:00   |                        |
+# | node0 |----------------------|                        |
+# ---------       2.3.4.4        | 2.4.4.4                |
+#                                |                        |
+#                                |                        |
+# ---------  AA:BB:CC:DD:EE:01   |                        |
+# | node1 |----------------------|                        |
+# ---------       2.3.4.5        | 2.4.4.5                |
+#                                |                        |
+#                                |                        |
+# ---------  AA:BB:CC:DD:EE:02   |                        |
+# | node2 |----------------------|                        |
+# ---------       2.3.4.6        | 2.4.4.6                |
+#                                |                        |
+# Yaml definition of the disk drives available on
+# all hosts
+# Required
+disks:
+  # Comma-separated list of drives; note that these
+  # will be automatically repartitioned
+  drive_list: vda
+  # The boot drive to provide the bootloader in kickstart
+  boot_drive: vda
+
+# Yaml definition of mgmt network
+# This always needs to be supplied
+# by the Customer.
+networks:
+  # the mgmt network is used to configure network devices for
+  # node0's kickstart - for node1-n see the "node" network below
+  mgmt:
+    gateway: 2.3.4.1
+    netmask: 255.255.255.0
+    nameserver: 10.18.183.40,10.18.183.41
+  storage:
+    netmask: 255.255.255.0
+
+# These global fields apply to all nodes.
+# They can be locally overridden by specifying
+# the config key:value under the node definition
+#
+# NOTE: cimc_* information is not required in proxmox
+# environments
+global:
+  ssh_pubkey: ~/.ssh/id_rsa.pub
+
+  # the available IP range for assignment to pods
+  cluster_ip_range: 10.254.0.0/16
+
+  # the search domain for service discovery between pods
+  cluster_domain: cluster.local
+
+  # the cluster-specific IP address to assign to kube-dns; this must
+  # be an unused IP and within the `global.cluster_ip_range`
+  cluster_dns: 10.254.0.10
+
+  # The cluster-specifc IP address of the API seerver; this must
+  # be the first address in the cluster_ip_range block
+  cluster_kube_api: 10.254.0.1
+
+  # specify an NFS server, the share on the server, the mountpoint
+  # on the nodes, and the mount options to use
+  nfs_mounts:
+  - server: 10.10.24.2
+    share: /vol_01022017_112922_60/lab1_harmony_demo/proxmox-example
+    mountpoint: /var/lib/kolla
+    options: vers=3,tcp
+
+  # Optional: a list of NTP servers to configure on each host
+  # the four servers for us.pool.ntp.org are used if not
+  # provided
+  ntp_servers:
+  - 1.ntp.esl.cisco.com
+  - 2.ntp.esl.cisco.com
+
+# Node definition defines what nodes the control plane
+# will be deployed on.
+hosts:
+    # host_mac is required in proxmox environments and
+    # MUST match the MAC addresses defined in the network
+    # sections above AND also in your axion configuration
+  - host_mac: AA:BB:CC:DD:EE:00
+
+    # host_ip is also required in proxmox environments
+    # and will be used to establish static IP address for
+    # the master role
+    host_ip: 2.3.4.4
+
+    # host_name is required, will be used to set the hostname
+    # for the installed node
+    host_name: node0
+
+    # host_bootif is optional, but highly recommended; this
+    # defines the interface to dhcp with during theinitramfs
+    # process. Without specifying this all network devices will
+    # attempt DHCP and slow down the boot process. By providing
+    # this option we will shortcut the DHCP process and booting
+    # will be much faster
+    host_bootif: eth0
+
+    # The list of control plane roles this node will fullfill
+    roles:
+      # The master node is installed from ISO
+      - iso-install
+      - node
+
+    # define the interfaces for kickstart to configure
+    interfaces:
+      - bootproto: static
+        device: bond0
+        ipv6: auto
+        ip: 2.3.4.4
+        activate: null
+        bondslaves: eth0,eth1
+        bondopts: miimon=1,updelay=0,downdelay=0,mode=balance-rr
+        network: mgmt
+      - bootproto: static
+        device: bond1
+        ip: 2.4.4.4
+        activate: null
+        bondslaves: eth2,eth3
+        bondopts: miimon=1,updelay=0,downdelay=0,mode=balance-rr
+        network: storage
+
+    # The second (node1) definition starts here
+  - host_mac: AA:BB:CC:DD:EE:01
+    host_ip: 2.3.4.5
+    host_name: node1
+    host_bootif: eth0
+
+    roles:
+      # The node role will be netbooted
+      # and will run the kubernetes worker services
+      - node
+
+    # define the interfaces for kickstart to configure
+    interfaces:
+      - bootproto: static
+        device: bond0
+        ipv6: auto
+        ip: 2.3.4.5
+        activate: null
+        bondslaves: eth0,eth1
+        bondopts: miimon=1,updelay=0,downdelay=0,mode=balance-rr
+        network: mgmt
+      - bootproto: static
+        device: bond1
+        ip: 2.4.4.4
+        activate: null
+        bondslaves: eth2,eth3
+        bondopts: miimon=1,updelay=0,downdelay=0,mode=balance-rr
+        network: storage
+    # The third (node2) definition starts here
+  - host_mac: AA:BB:CC:DD:EE:02
+    host_ip: 2.3.4.6
+    host_name: node2
+    host_bootif: eth0
+    roles:
+      - node
+
+    # define the interfaces for kickstart to configure
+    interfaces:
+      - bootproto: static
+        device: bond0
+        ipv6: auto
+        ip: 2.3.4.6
+        activate: null
+        bondslaves: eth0,eth1
+        bondopts: miimon=1,updelay=0,downdelay=0,mode=balance-rr
+        network: mgmt
+      - bootproto: static
+        device: bond1
+        ip: 2.4.4.6
+        activate: null
+        bondslaves: eth2,eth3
+        bondopts: miimon=1,updelay=0,downdelay=0,mode=balance-rr
+        network: storage
+
+# Required: dnsmasq-specific configuration options
+dnsmasq:
+  # The range of IP addresses available for lease from dnsmasq
+  dhcp_range: 2.3.4.2,2.3.4.254
+
+# pixiecore image to pull
+pixiecore:
+  image: harmony-baremetal/pixiecore:dev-8328
+
+# pixiecore_server image to pull
+pixiecore_server:
+  # defaults to containers.cisco.com registry unless docker.insecure_registry is provided
+  image: harmony-baremetal/pixiecore-server:dev-8328
+  host_port: 9091
+
+# httpd image to pull
+httpd:
+  image: harmony-baremetal/httpd:dev-8328
+
+# Docker authentication credential
+docker:
+  auth: aGFybW9ueS1iYXJlbWV0YWwrbGVvbmlkYXM6RzE1VEZFNk40TVNMUkZEUDdLSVdWU1BTWUwxNVhaOTFYMkFWTFdOQ1o5Q0MxTjM4MFQ5QUpHTTZORFJFSVA1Mw==
+
+  secret:
+    name: containers.cisco.com
+    namespace: default
+    dockercfg: eyJodHRwczovL2NvbnRhaW5lcnMuY2lzY28uY29tIjp7InVzZXJuYW1lIjoiaGFybW9ueS1iYXJlbWV0YWwrbGVvbmlkYXMiLCJwYXNzd29yZCI6IkcxNVRGRTZONE1TTFJGRFA3S0lXVlNQU1lMMTVYWjkxWDJBVkxXTkNaOUNDMU4zODBUOUFKR002TkRSRUlQNTMiLCJlbWFpbCI6Imhhcm1vbnktYmFyZW1ldGFsQGNpc2NvLmNvbSIsImF1dGgiOiJhR0Z5Ylc5dWVTMWlZWEpsYldWMFlXd3JiR1Z2Ym1sa1lYTTZSekUxVkVaRk5rNDBUVk5NVWtaRVVEZExTVmRXVTFCVFdVd3hOVmhhT1RGWU1rRldURmRPUTFvNVEwTXhUak00TUZRNVFVcEhUVFpPUkZKRlNWQTFNdz09In19
+
+  insecure_registry: filez.lab.dfj.io:5000
+
+# Optional: Values set by HCP used by RCM for calling back
+# If you set values here you must add this line to the manifest_loader:
+# /etc/sparta/manifests/rcm-job.yaml
+hcp:
+  endpoint: filez.lab.dfj.io:8000
+  authorization: some_key
+
+
+# Configuration for the sparta manifest loader
+manifest_loader:
+  manifests:
+    - /etc/sparta/manifests/containers.cisco.com-secret.yaml
+    - /etc/sparta/manifests/kubedns-svc.yaml
+    - /etc/sparta/manifests/kubedns-deployment.yaml
+    - /etc/sparta/manifests/tiller-deployment.yaml
+    - /etc/sparta/manifests/netboot-deployment.yaml
+    - /etc/sparta/manifests/netboot-svc.yaml
+    - /etc/sparta/manifests/controller-manager-deploy.yaml
+    - /etc/sparta/manifests/scheduler-deploy.yaml
+
+# NOTE:
+# docker and bootstrapper configuration is not necessary in proxmox
+# environments and can be safely removed
+
+# users to create on the host; optionally assign them to
+# groups and configure authorized_keys files
+users:
+  # username to use for the created user
+  admin:
+    # groups to assign the user; the wheel group provides
+    # passwordless sudo access to this user
+    groups:
+      - wheel
+    # public ssh keys to put into user's authorized_keys file
+    authorized_keys:
+      - ssh-rsa mypublicsshkeygoeshere== bob@localhost

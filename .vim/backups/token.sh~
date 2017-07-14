@@ -1,0 +1,53 @@
+#!/bin/bash
+# This runs a thing on macos and hides the input. Easily adaptable to other things.
+
+set -e
+set -o pipefail
+set -u
+
+
+unset PIN
+unset CHARCOUNT
+unset TOKEN
+
+PROMPT=''
+TOKEN_FILE=~/.softoken.pin
+
+#if [ -f $TOKEN_FILE ]; then
+PIN=$(cat $TOKEN_FILE);
+#else
+#    echo -n "Enter PIN: "
+#
+#    stty -echo
+#
+#    CHARCOUNT=0
+#    while IFS= read -p "$PROMPT" -r -s -n 1 CHAR
+#    do
+#        # Enter == done
+#        if [[ $CHAR == $'\0' ]] ; then
+#            break
+#        fi
+#        # Handle backspace
+#        if [[ $CHAR == $'\177' ]] ; then
+#            if [ $CHARCOUNT -gt 0 ] ; then
+#                CHARCOUNT=$((CHARCOUNT-1))
+#                PROMPT=$'\b \b'
+#                PIN="${PIN%?}"
+#            else
+#                PROMPT=''
+#            fi
+#        else
+#            CHARCOUNT=$((CHARCOUNT+1))
+#            PROMPT='*'
+#            PIN+="$CHAR"
+#        fi
+#    done
+fi
+
+#stty echo
+
+TOKEN=$(/Applications/SofToken\ II.app/Contents/Resources/st-wrap.sh -p <<< "$PIN")
+
+printf "\n"
+
+printf "$TOKEN" | head -n 1 | pbcopy

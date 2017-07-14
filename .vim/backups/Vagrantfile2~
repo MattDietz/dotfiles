@@ -1,0 +1,88 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+require 'yaml'
+require 'fileutils'
+require 'open-uri'
+
+# check for required plugins
+[
+    'vagrant-triggers',
+].each do |plugin|
+    unless Vagrant.has_plugin?(plugin)
+        raise "#{plugin} plugin not found. Please install it via 'vagrant plugin install'"
+    end
+end
+
+
+# somewhere to store our ISO
+$config_dir = ENV["HOME"]+'/.harmony/vagrant'
+FileUtils::mkdir_p $config_dir
+$ipxe_iso = $config_dir+'/custom-ipxe.iso'
+
+$env = YAML::load_file(ENV['SPARTA_CONFIG_FILE'])
+
+# out function to check whether node0 is fully booted
+$wait_for_containers = <<EOF
+while ! kubectl get pods 2>/dev/null | grep pixiecore | grep Running; do
+    echo "Waiting for all containers to launch, sleeping"
+    sleep 5
+done
+EOF
+
+
+Vagrant.configure("2") do |config|
+    config.ssh.username = "admin"
+    config.ssh.keys_only = false
+    config.vm.synced_folder ".", "/vagrant", disabled: true
+
+    node0_config = $env['hosts'][0]
+
+
+    config.vm.define "node0" do |node0|
+        mac = node0_config['host_mac']
+        host_mac = mac.gsub! ':', ''
+        host_ip = node0_config['host_ip']
+        node0.vm.box = "c33s/empty"
+        node0.vm.boot_timeout = 600
+        node0.vm.network "private_network", ip: host_ip, auto_config: false, bridge: "eno1", :mac => host_mac
+        node0.vm.provision "shell", inline: $wait_for_containers
+        node0.vm.provider :virtualbox do |vb|
+            if ENV['SPARTA_SINGLE_NODE']
+                vb.memory = 4096
+            end
+            vb.customize [ "storageattach", :id, "--storagectl", "IDE", "--port", "0", "--device", "0", "--type", "dvddrive", "--medium", "./rhel-atomic-unattended-7.3.2-1.x86_64.iso"]
+            vb.customize [ "modifyvm", :id, "--boot1", "disk", "--boot2",  "dvd"]
+        end
+    end
+
+    if ! ENV['SPARTA_SINGLE_NODE']
+        $idx=1
+        $env['hosts'][1..-1].each do |host_config|
+            host_name = host_config['host_name']
+            mac = host_config['host_mac']
+            host_mac = mac.gsub! ':', ''
+            config.vm.define host_name do |host|
+
+                # check to see if the ISO exists, else download it
+                host.trigger.before [:up, :provision] do
+                    if ! File.exists?($ipxe_iso)
+                        puts "Downloading iPXE ISO"
+                        download = open($env['vagrant']['ipxe_iso_location'])
+                        IO.copy_stream(download, $ipxe_iso)
+                    end
+                end
+
+                host.vm.box = "c33s/empty"
+                host.vm.boot_timeout = 600
+                host.vm.network "private_network", ip: host_config['host_ip'], auto_config: false, netmask: 24, :mac => host_mac
+                host.vm.provider :virtualbox do |vb|
+                    # needed to allow large enough ramdisk for kickstart
+                    vb.memory = 2048
+                    vb.customize [ "storageattach", :id, "--storagectl", "IDE", "--port", "0", "--device", "0", "--type", "dvddrive", "--medium", $ipxe_iso]
+                    vb.customize [ "modifyvm", :id, "--boot1", "disk", "--boot2",  "dvd"]
+                end # provider config
+            end # config.vm
+        end
+    end # single node
+end

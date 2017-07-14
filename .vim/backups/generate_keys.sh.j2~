@@ -1,0 +1,13 @@
+#!/bin/bash
+
+CERT_DIR=/etc/ssl
+
+set -euo
+mkdir -p ${CERT_DIR}
+
+openssl genrsa -out ${CERT_DIR}/ca-key.pem 2048 > /dev/null 2>&1
+openssl req -x509 -new -nodes -key ca-key.pem -days 10000 -out ${CERT_DIR}/ca.pem -subj "/CN=kube-ca" > /dev/null 2>&1
+openssl genrsa -out ${CERT_DIR}/apiserver-key.pem 2048 > /dev/null 2>&1
+openssl req -new -key apiserver-key.pem -out ${CERT_DIR}/apiserver.csr -subj "/CN=kube-apiserver" -config ${CONFIG} > /dev/null 2>&1
+openssl x509 -req -in apiserver.csr -CA ca.pem -CAkey ca-key.pem -CAcreateserial -out ${CERT_DIR}/apiserver.pem -days 3650 -extensions v3_req -extfile ${CONFIG} > /dev/null 2>&1
+cat ca.pem >> apiserver.pem

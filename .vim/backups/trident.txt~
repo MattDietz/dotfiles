@@ -1,0 +1,55 @@
+# To cleanup shit when it goes awry:
+kubectl delete pv --ignore-not-found=true trident -n trident
+kubectl delete pvc --ignore-not-found=true trident -n trident
+kubectl delete deployment --ignore-not-found=true trident -n trident
+kubectl delete pod --ignore-not-found=true trident-ephemeral -n trident
+kubectl delete pod --ignore-not-found=true trident-launcher -n trident
+VERSION=17.04.1
+
+# Launching the installer:
+cd ~/
+
+# Make the launcher image (No Push or tag needed since the Makefile does it for the launcher for some reason)
+pushd .
+cd ~/code/golang/trident/
+TRIDENT_VERSION="$VERSION" REGISTRY_ADDR=localhost:5000/netapp make docker_launcher_build
+
+#  copy a backend from the samples dir into setup as "backend.json"
+#  Pray
+#  Pull the netapp/trident-launcher image
+#  tag it:
+docker tag netapp/trident-launcher:17.04.1 localhost:5000/netapp/trident-launcher:17.04.1
+
+#  Push it:
+docker push localhost:5000/netapp/trident-launcher
+
+#  Edit the Makefile in the trident repo so it's not putting "-custom" on the end of your images
+#  Change to: TRIDENT_VERSION := ${TRIDENT_VERSION}
+
+# SSH into all the nodes and pull the image
+ssh admin@10.0.1.2 -t "sudo docker rmi -f netapp/trident-launcher:$VERSION && sudo docker pull 192.168.3.95:5000/netapp/trident-launcher:17.04.1 && sudo docker tag 192.168.3.95:5000/netapp/trident-launcher:17.04.1 netapp/trident-launcher:17.04.1"
+ssh admin@10.0.1.3 -t "sudo docker rmi -f netapp/trident-launcher:$VERSION && sudo docker pull 192.168.3.95:5000/netapp/trident-launcher:17.04.1 && sudo docker tag 192.168.3.95:5000/netapp/trident-launcher:17.04.1 netapp/trident-launcher:17.04.1"
+ssh admin@10.0.1.4 -t "sudo docker rmi -f netapp/trident-launcher:$VERSION && sudo docker pull 192.168.3.95:5000/netapp/trident-launcher:17.04.1 && sudo docker tag 192.168.3.95:5000/netapp/trident-launcher:17.04.1 netapp/trident-launcher:17.04.1"
+
+#  Build a trident container
+TRIDENT_VERSION="$VERSION" REGISTRY_ADDR=netapp make docker_image
+
+#  Tag the trident container
+docker tag netapp/trident:17.04.1 localhost:5000/netapp/trident:17.04.1
+
+#  Push the trident container
+docker push localhost:5000/netapp/trident
+
+#  SSH into all the nodes and pull the image, then retag it:
+ssh admin@10.0.1.2 "sudo docker rmi -f netapp/trident:$VERSION && sudo docker pull 192.168.3.95:5000/netapp/trident:17.04.1 && sudo docker tag 192.168.3.95:5000/netapp/trident:17.04.1 netapp/trident:17.04.1"
+ssh admin@10.0.1.3 "sudo docker rmi -f netapp/trident:$VERSION && sudo docker pull 192.168.3.95:5000/netapp/trident:17.04.1 && sudo docker tag 192.168.3.95:5000/netapp/trident:17.04.1 netapp/trident:17.04.1"
+ssh admin@10.0.1.4 "sudo docker rmi -f netapp/trident:$VERSION && sudo docker pull 192.168.3.95:5000/netapp/trident:17.04.1 && sudo docker tag 192.168.3.95:5000/netapp/trident:17.04.1 netapp/trident:17.04.1"
+
+# Get the installer tarball from here: https://github.com/NetApp/trident/releases/tag/v17.04.1
+#  - Because it's not like the one in the motherfucking repo has the correct bits. In fact, for a laugh, vimdiff the one in the tarball and the one in the repo.
+# Run the installer
+popd
+pushd .
+cd ~/code/golang/trident-installer
+./install_trident.sh -n trident
+popd

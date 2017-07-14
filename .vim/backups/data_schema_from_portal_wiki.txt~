@@ -1,0 +1,79 @@
+Data we're providing (some of these might overlap or be fields on the model. I'm just collecting everything here)
+
+# Entitlment data is show on multiple pages. We'll have to have that as a callable endpoint on the config API so the survey/wizard can reach it
+
+Metapod New Customer Registration:
+  Company Name
+  First Name
+  Last Name
+  Email Address
+  Phone Number
+  Subscription ID (Salesforce subscription ID?)
+  Password
+Availability Zone Details:
+  Availability Zone Name (String)
+
+Networking Info
+Out of band router information:
+  Public IP address of an ISR2901 (presumably an edge router)
+  Gateway IP of said ISR2901
+Networking: External Network
+  # Potentially many rows of data here
+  CIDR
+  Usable IP Pool
+ASR Info (Cisco Aggrs)
+  ASR VIP
+  ASR 1
+  ASR 2
+Infrastructure Networks
+  VLAD ID
+  IP Range Start
+  IP Range End
+  Routed Network (dropdown box, need range of values)
+  Gateway IP
+  Port
+Networking IP Address Assignment
+  # Some redundant information here with the ASR page?
+  # Later note in the slides implies this will be auto populated, and I guess presented here for changes?
+  VIP
+  Dashboard (this is an IP)
+  API (also an IP)
+  First NAT IP 
+  ASR VIP
+  ASR 1 IP
+  ASR 2 IP
+Hardware Information (as in, what hardware do they have at all?)
+# This is ignored for MVP
+Storage Service Selection
+  Storage device
+    Values are "Metapod Storage Service" and "External Storage Device"
+Storage: External Device Network
+  # Many rows of data potentially
+  IP Address
+  Nexus Port (comma delimited list of integers)
+  Access Details (URL)
+Authentication
+  # Customer can provide their own auth
+  Existing Infrastructure
+    Dropdown: values ("Yes", "No")
+  # Details if yes
+  Principle Name: string, suggested input is an email (as in LDAP)
+  DN Structure # DN items in comma delimited string
+  Server (hostname or IP)
+DNS Setup
+  DNS (IP address)
+  APIs (looks like A records that will refer back to the API IP set in Networking IP Address Assignment?)
+  Dashboard (Looks like A records that will refer back to the Dashboard IP set in Networking IP Address Assignment?)
+Certificate Setup
+  # 3 checkboxes, but notes imply these should be grouped radiobuttons
+  # I suspect we'll have to store their selection here so it can be referenced by Ops/other humans
+  Options:
+    "Create certificates on your behalf"
+    "Provide you with a Certificate Authority which can be signed by your service of choice"
+    "Work with you to have Certificates you create securely exchanged"
+Review and Deploy Availability Zone:
+  # Shows entitlement data of:
+    * Sockets Used / Sockets Licensed
+    * Memory Used / Memory available
+    * Number of Servers
+

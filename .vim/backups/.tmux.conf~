@@ -1,0 +1,53 @@
+set -g default-terminal "screen-256color"
+
+# remap prefix to Control + a
+set -g prefix C-a
+unbind C-b
+bind C-a send-prefix
+
+# force a reload of the config file
+unbind r
+bind r source-file ~/.tmux.conf
+
+# quick pane cycling
+unbind ^A
+bind ^A select-pane -t :.+
+
+bind ^a last-window
+
+unbind A
+bind A command-prompt "rename-window %%"
+
+unbind '"'
+bind '"' choose-window
+
+unbind w
+bind w split-window -v
+
+unbind v
+bind v split-window -h
+
+# Set status bar
+set -g status-bg black
+set -g status-fg white
+set -g window-status-current-bg colour12
+set -g window-status-current-fg colour15
+
+# Sets vim copy mode keys, and adds yank and vblock bindings
+setw -g mode-keys vi
+bind-key -t vi-copy 'v' begin-selection
+bind-key -t vi-copy 'y' copy-selection
+
+setw -g monitor-activity on
+set -g visual-activity on
+
+setw -g utf8 on
+set -g status-utf8 on
+
+set -g mouse on
+
+# Sets the scrollback size
+set -g history-limit 10000
+
+# Doesn't allow tmux to rename the window
+set-option -g allow-rename off

@@ -1,0 +1,593 @@
+import collections
+import datetime
+import errno
+import fcntl
+import json
+import logging
+import os
+
+import jinja2
+import netaddr
+import yaml
+
+from harmonium import config as harmonium_config
+from harmonium import exc
+from harmonium import iso
+from harmonium import proxmox
+from harmonium import tranquility
+
+LOG = logging.getLogger('harmonium')
+
+TEMPLATE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'templates')
+
+
+def _setup_logging(log_level):
+    if log_level == logging.DEBUG:
+        formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
+        # All loggers grab this default log, therefore it is useful to turn on
+        # DEBUG level for all.
+        logger = logging.getLogger()
+    else:
+        # Setup a root logger that doesn't go anywhere, so we can get around
+        # 'No handlers could be found for logger "paramiko.transport"' being
+        # printed on the terminal.
+        rootlogger = logging.getLogger()
+        roothandler = NullHandler()
+        rootlogger.addHandler(roothandler)
+
+        formatter = logging.Formatter('%(message)s')
+        logger = logging.getLogger('harmonium')
+
+    logger.setLevel(log_level)
+    handler = logging.StreamHandler()
+    handler.setFormatter(formatter)
+    handler.setLevel(log_level)
+    logger.addHandler(handler)
+
+
+class NullHandler(logging.Handler):
+    def emit(self, record):
+        pass
+
+
+def yamlify(msg):
+    return yaml.safe_dump(msg, default_flow_style=False)
+
+
+class Cache(object):
+    def __init__(self, cachedir):
+        self.cachedir = cachedir
+
+    def ok_to_store(self, clientkwargs):
+        # If a field list was specified, then it might not have enough data for us to want to store.
+        headers = clientkwargs.get('headers', {})
+        x_fields = headers.get('X-fields', None)
+        if x_fields is not None and x_fields != "":
+            return False
+        return True
+
+    def add(self, name, payload):
+        LOG.debug('Saving cache for %s.', name)
+        try:
+            os.makedirs(self.cachedir)
+        except OSError as e:
+            if e.errno != errno.EEXIST:
+                raise
+
+        with open(os.path.join(self.cachedir, name), 'w') as f:
+            # This will only allow one write at a time, waiting for all currently running reads to finish.
+            # When we are writing, read operations locked with fcntl.LOCK_SH will wait.
+            fcntl.lockf(f, fcntl.LOCK_EX)
+            f.write(payload)
+
+    def remove(self, name):
+        try:
+            os.remove(os.path.join(self.cachedir, name))
+            LOG.debug('Removed cache for %s.', name)
+        except OSError as e:
+            if e.errno != errno.ENOENT:
+                raise
+
+    def remove_all_except(self, names):
+        try:
+            l = os.listdir(self.cachedir)
+        except OSError as e:
+            if e.errno == errno.ENOENT:
+                return
+            raise
+        for name in l:
+            if name not in names:
+                self.remove(name)
+
+    def get(self, name, max_age=None):
+        cache_file = os.path.join(self.cachedir, name)
+
+        if max_age is not None:
+            try:
+                s = os.stat(cache_file)
+            except OSError as e:
+                if e.errno == errno.ENOENT:
+                    return None
+                raise
+
+            if datetime.datetime.fromtimestamp(s.st_mtime) + datetime.timedelta(
+                    seconds=max_age) < datetime.datetime.now():
+                return None
+
+        try:
+            with open(cache_file, 'r') as f:
+                # This will block until a currently running writing operation is finished, and allow multiple reads to
+                # happen at the same time.
+                fcntl.lockf(f, fcntl.LOCK_SH)
+                cache = f.read()
+        except OSError as e:
+            if e.errno == errno.ENOENT:
+                return None
+            raise
+
+        LOG.debug('Retrieved cache for %s.', name)
+        try:
+            return json.loads(cache)
+        except ValueError:
+            return cache
+
+    def get_all(self, max_age=None):
+        try:
+            l = os.listdir(self.cachedir)
+        except OSError as e:
+            if e.errno == errno.ENOENT:
+                return None
+            raise
+
+        LOG.debug('Retrieved cache listing.')
+
+        reservations = []
+        for name in l:
+            reservation = self.get(name, max_age=max_age)
+            if reservation:
+                reservations.append(reservation)
+
+        return reservations
+
+
+class Environment(object):
+    def __init__(self,
+                 username=None,
+                 debug=None,
+                 verify_ssl=None,
+                 tranquility_url=None,
+                 isoservice_url=None,
+                 isotester_container_img=None,
+                 api_version='v1'):
+        self.config = harmonium_config.Settings
+        self.username = self.config.username(arg=username)
+        self._debug = self.config.debug(arg=debug)
+        self.tranquility_url = self.config.tranquility_url(arg=tranquility_url)
+        self.verify_ssl = self.config.verify_ssl(arg=verify_ssl)
+        self.isoservice_url = self.config.isoservice_url(arg=isoservice_url)
+        self.ssh_fallback_cache = self.config.ssh_fallback_cache()
+        self.ssh_always_cache = self.config.ssh_always_cache()
+        self.list_fallback_cache = self.config.list_fallback_cache()
+        self.isotester_container_img = self.config.isotester_container_img(arg=isotester_container_img)
+
+        self.cache = Cache(harmonium_config.CACHEDIR)
+        self.client = tranquility.TranquilityClient(
+            baseurl=self.tranquility_url, username=self.username, verify_ssl=self.verify_ssl, api_version=api_version)
+        self.isoservice = iso.IsoService(self.isoservice_url)
+
+    @property
+    def debug(self):
+        return self._debug
+
+    @debug.setter
+    def debug(self, val):
+        self._debug = val
+        _setup_logging(log_level=logging.DEBUG if val is True else logging.INFO)
+
+    def proxmox_ctl(self, reservation):
+        assert reservation.type == 'proxmox'
+        # all vms are allocated on one proxmox host, so just grab node0's mgmt host
+        return proxmox.Host(fqdn=reservation.node0.mgmt_host, user=self.username)
+
+    def _handle_response(self, response, expected_status):
+        try:
+            msg = response.json()
+        except ValueError:
+            msg = response.text
+
+        if response.status_code != expected_status:
+            LOG.debug(str(vars(response)))
+            if isinstance(msg, dict) and 'message' in msg:
+                msg = msg['message']
+                if response.status_code == 404:
+                    LOG.debug('404 full error - %s', msg)
+                    msg = msg.split('.')[0]
+            raise exc.DieWithError(str(msg))
+        else:
+            return msg
+
+    def create_reservation(self, machine_count, reservation_type, name=None, tags=None):
+        request_payload = {
+            'type': reservation_type,
+            'machine_specs': [],
+        }
+        if name is not None:
+            request_payload['name'] = name
+        if tags:
+            request_payload['tags'] = tags
+        for machine_type, count in machine_count.items():
+            for _ in xrange(count):
+                request_payload['machine_specs'].append({
+                    'cores': self.config.cores_per_proxmox_vm(),
+                    'memory_gb': self.config.memory_gb_per_proxmox_vm(),
+                    'type': machine_type,
+                })
+        LOG.debug('Sending reservation request with:\n%s', yamlify(request_payload))
+        return self._handle_response(self.client.post('reservations', data=request_payload), expected_status=201)
+
+    def delete_reservation(self, name):
+        self.cache.remove(name)
+        return self._handle_response(self.client.delete('reservations/%s' % name), expected_status=204)
+
+    def get_reservation(self, name, cache_fallback=False, always_cache_for=0, deserialize=True, **clientkwargs):
+        reservation = None
+
+        if always_cache_for > 0:
+            reservation = self.cache.get(name, max_age=always_cache_for)
+            if reservation:
+                LOG.info('Using locally cached reservation.')
+
+        if not reservation:
+            response = None
+            try:
+                response = self.client.get('reservations/%s' % name, **clientkwargs)
+            except tranquility.LoginError as e:
+                if not cache_fallback:
+                    raise
+                try:
+                    reservation = self.cache.get(name)
+                    LOG.info('Using locally cached reservation.')
+                except Exception:
+                    LOG.error('Error: %s', str(e))
+                    raise
+                if not reservation:
+                    raise e
+                LOG.error('Error: %s', str(e))
+
+            if response is not None:
+                try:
+                    reservation = response.json()
+                except ValueError:
+                    reservation = response.text
+
+                if response.status_code == 200:
+                    if self.cache.ok_to_store(clientkwargs):
+                        self.cache.add(name, response.text)
+                elif response.status_code == 404:
+                    self.cache.remove(name)
+                    raise exc.DieWithError('Reservation not found.')
+                else:
+                    LOG.debug(str(vars(response)))
+                    if isinstance(reservation, dict) and 'message' in reservation:
+                        reservation = reservation['message']
+                    raise exc.DieWithError(str(reservation))
+
+        if deserialize:
+            reservation = ClusterReservation.from_serializable(reservation, self.username)
+        return reservation
+
+    def get_reservations(self, deserialize=True, cache_fallback=False, **clientkwargs):
+        reservations = None
+        ok_to_store_cache = self.cache.ok_to_store(clientkwargs)
+        try:
+            reservations = self._handle_response(self.client.get('reservations', **clientkwargs), expected_status=200)
+        except tranquility.LoginError as e:
+            if not cache_fallback:
+                raise
+            try:
+                reservations = self.cache.get_all()
+                ok_to_store_cache = False
+                LOG.info('Using locally cached list of reservations.')
+            except Exception:
+                LOG.error('Error: %s', str(e))
+                raise
+            if not reservations:
+                raise e
+            LOG.error('Error: %s', str(e))
+
+        if ok_to_store_cache or deserialize:
+            d_reservations = []
+            reservation_names = []
+            for reservation in reservations:
+                d_reservation = ClusterReservation.from_serializable(reservation, self.username)
+                d_reservations.append(d_reservation)
+                reservation_names.append(d_reservation.name)
+                if ok_to_store_cache:
+                    self.cache.add(d_reservation.name, json.dumps(reservation))
+
+            # Even though we might not have enough data to store caching, we can delete entries that are no longer
+            # valid.
+            self.cache.remove_all_except(reservation_names)
+
+        if deserialize:
+            return d_reservations
+        return reservations
+
+    def update_reservation_deployment(self, name, config=None, status=None, iso_url=None):
+        payload = {}
+        if config is not None:
+            payload['config'] = config
+        if status is not None:
+            payload['status'] = status
+        if iso_url is not None:
+            payload['iso_url'] = iso_url
+        assert payload, 'at least one of "config", "status", "iso_url" must be specified'
+        return self._handle_response(
+            self.client.put('reservations/%s/deployment' % name, data=payload), expected_status=200)
+
+    def reassign_reservation(self, name, new_owner, old_owner=None):
+        data = {'new_owner': new_owner}
+        if old_owner is not None:
+            data['old_owner'] = old_owner
+        return self._handle_response(self.client.put('reservations/%s/reassign' % name, data=data), expected_status=200)
+
+    def fail_deployment(self, reservation, errmsg):
+        LOG.error('Deployment failed.')
+        errmsg = errmsg.strip()
+        if len(errmsg) > 65500:
+            LOG.debug('Error message is too large, truncating size from %s to 65500', len(errmsg))
+            LOG.debug(errmsg)
+            errmsg = errmsg[:65500]
+        try:
+            self.update_reservation_deployment(reservation.name, status='failure: %s' % errmsg)
+        except Exception as e:
+            LOG.error('Error setting deployment status to failure: %s', str(e))
+        raise exc.DieWithError(errmsg)
+
+
+class Machine(object):
+    # pylint: disable=redefined-builtin
+    def __init__(self, name, mid, mac, cores, memory_gb, mgmt_host, mgmt_driver, mgmt_username, mgmt_password,
+                 interfaces, type):
+        self.mid = mid
+        self.name = name
+        self.mgmt_host = mgmt_host
+        self.cores = cores
+        self.memory_gb = memory_gb
+        self.mac = mac
+        self.mgmt_driver = mgmt_driver
+        self.mgmt_username = mgmt_username
+        self.mgmt_password = mgmt_password
+        self.type = type
+        self.interfaces = interfaces
+        self.mgmt_interface = self.interfaces.get('mgmt', {})
+
+    @classmethod
+    def from_serializable(cls, obj, name):
+        return cls(
+            mid=obj['id'],
+            name=name,
+            mac=obj['mac'],
+            cores=obj['cores'],
+            memory_gb=obj['memory_gb'],
+            mgmt_username=obj['mgmt_username'],
+            mgmt_password=obj['mgmt_password'],
+            mgmt_driver=obj['mgmt_driver'],
+            mgmt_host=obj['mgmt_host'].replace('https://', '').replace('http://', ''),
+            interfaces={iface['name']: iface
+                        for iface in obj['interfaces']},
+            type=obj['type'], )
+
+    def to_dict(self):
+        data = dict(self.__dict__)
+        data['id'] = data.pop('mid')
+        data.update({
+            'ip': self.ip,
+            'shortname': self.shortname,
+        })
+        return data
+
+    @property
+    def disk_gb(self):
+        # used by proxmox api
+        return 30
+
+    @property
+    def shortname(self):
+        return self.name.split('-')[-1]
+
+    @property
+    def ip(self):
+        return self.mgmt_interface.get('ip')
+
+    @property
+    def bridge(self):
+        return self.mgmt_interface.get('bridge')
+
+    def __eq__(self, other):
+        for attr in ['mid', 'name', 'host']:
+            if getattr(self, attr) != getattr(other, attr):
+                return False
+        return True
+
+
+class Network(object):
+    def __init__(self, name, ipnet, vlan, netmask, gateway):
+        self.name = name
+        self.vlan = int(vlan)
+        self.ipnet = ipnet
+        self.netmask = netmask
+        self.gateway = gateway
+
+    def to_dict(self):
+        return dict(self.__dict__)
+
+    @classmethod
+    def from_serializable(cls, obj):
+        return cls(name=obj['name'],
+                   vlan=obj['vlan'],
+                   ipnet=obj['ipnet'],
+                   netmask=obj['netmask'],
+                   gateway=obj['gateway'])
+
+
+def _collapse_networks(networks):
+    # given networks of the same type, collapse ipnets and vlans
+    assert networks, 'no networks to collapse'
+    name = networks[0].name
+    assert all(name == net.name for net in networks), 'networks are not the same type, expected %s' % name
+    # convert ipnets to netaddr objs, sort them, convert back to str.
+    ipnets = sorted(map(netaddr.IPNetwork, [net.ipnet for net in networks]))
+    ipnet_strs = []
+    for ipnet in ipnets:
+        if ipnet.prefixlen == 32:
+            ipnet_strs.append(str(netaddr.IPAddress(ipnet)))
+        else:
+            ipnet_strs.append(str(ipnet))
+    return {
+        'ipnets': ipnet_strs,
+        'vlans': sorted(set([net.vlan for net in networks])),
+        'gateway': networks[0].gateway,
+        'netmask': networks[0].netmask,
+    }
+
+
+class ClusterReservation(object):
+    def __init__(self, reservation_data, owner, networks, machines):
+        self.reservation_data = reservation_data
+        self.owner = owner
+        self.networks = networks
+        self.machines = machines
+        self.control_machines = [m for m in self.machines if m.type == 'control']
+        self.domain_machines = [m for m in self.machines if m.type == 'domain']
+        self.node0 = None
+        self.other_nodes = []
+        self._bondslaves = {
+            'bond0': {
+                'baremetal': ['enp9s0', 'enp10s0'],
+                'proxmox': ['eth0', 'eth1'],
+            },
+            'bond1': {
+                'baremetal': ['enp13s0', 'enp14s0'],
+                'proxmox': ['eth2', 'eth3'],
+            }
+        }
+        self._disk_drive = {'baremetal': 'sda', 'proxmox': 'vda'}
+
+        for machine_spec in self.control_machines:
+            if 'node0' in machine_spec.name:
+                self.node0 = machine_spec
+            else:
+                self.other_nodes.append(machine_spec)
+
+        assert self.node0 is not None, 'node0 was not found in the reservation'
+        assert len(self.other_nodes) == len(
+            self.control_machines) - 1, 'expected %d nodes but got %d nodes, is there more than one node0?' % (
+                len(self.control_machines) - 1, len(self.other_nodes))
+
+    def to_dict(self):
+        data = dict(self.reservation_data)
+        # replace the original reservation data for networks and machines
+        # since it has not been interpreted by harmonium, whereas
+        # self.networks and self.machines has (see Network, Machine classes)
+        data['networks'] = self.networks
+        data['machines'] = {m.shortname: m.to_dict() for m in self.machines}
+        return data
+
+    @classmethod
+    def from_serializable(cls, reservation, owner):
+        networks = collections.defaultdict(list)
+        for network in reservation['networks']:
+            networks[network['name']].append(Network.from_serializable(network))
+        collapsed_networks = {}
+        for network_name, all_networks in networks.items():
+            collapsed_networks[network_name] = _collapse_networks(all_networks)
+
+        machines = []
+        for machine in reservation['machines']:
+            machine_name = machine['name']
+            if reservation['type'] == 'proxmox':
+                # unfortunately proxmox does not allow having multiple VMs with same name,
+                # even if they have different ids, so namespace it {reservation_name-machine_id-machine_name}
+                machine_name = '%s-%s-%s' % (reservation['name'], machine['id'], machine['name'])
+            machines.append(Machine.from_serializable(machine, machine_name))
+
+        return cls(reservation_data=reservation, owner=owner, networks=collapsed_networks, machines=machines)
+
+    def generate_sparta_config(self, template_path=None):
+        template_file = "sparta.yaml.j2"
+        template_base = TEMPLATE_DIR
+        if template_path:
+            path, template_file = os.path.split(template_path)
+            path = os.path.expanduser(path)
+            template_base = path
+
+        env = jinja2.Environment(loader=jinja2.FileSystemLoader(template_base))
+        sparta_config_template = env.get_template(template_file)
+        return sparta_config_template.render(reservation=self, current_utc_time=datetime.datetime.utcnow())
+
+    def deployment_bondslaves_str(self, bond, first_only=False):
+        assert bond in self._bondslaves
+        bondslaves = self._bondslaves[bond][self.type]
+        resp = ','.join(bondslaves)
+        if first_only:
+            resp = bondslaves[0]
+        return resp
+
+    def get_machine_by_shortname(self, shortname):
+        for m in self.machines:
+            if m.shortname == shortname:
+                return m
+        return None
+
+    @property
+    def deployment_disk_drive(self):
+        return self._disk_drive[self.type]
+
+    @property
+    def deployment_status(self):
+        return self.reservation_data['deployment']['status']
+
+    @property
+    def deployment_iso_url(self):
+        return self.reservation_data['deployment']['iso_url']
+
+    @property
+    def deployment_config(self):
+        return self.reservation_data['deployment']['config']
+
+    @property
+    def deployment_created(self):
+        return self.reservation_data['deployment']['last_config_update']
+
+    @property
+    def last_status_update(self):
+        return self.reservation_data['deployment']['last_status_update']
+
+    @property
+    def created(self):
+        return self.reservation_data['created']
+
+    @property
+    def name(self):
+        return self.reservation_data['name']
+
+    @property
+    def type(self):
+        return self.reservation_data['type']
+
+    @property
+    def tags(self):
+        return self.reservation_data['tags']
+
+    @property
+    def hosts(self):
+        return self.machines
+
+    @property
+    def control_hosts(self):
+        return self.control_machines
+
+    @property
+    def domain_hosts(self):
+        return self.domain_machines

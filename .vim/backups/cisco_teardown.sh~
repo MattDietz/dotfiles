@@ -1,0 +1,44 @@
+# #!/bin/sh
+# 
+# TODO we can probably figure out which interface is the NAT'd interface here and then get that IP
+VM_IFACE_NUMBER=1
+VM_NAME="Mactunnel"
+VPN_GATEWAY=`VBoxManage guestproperty get $VM_NAME /VirtualBox/GuestInfo/Net/$VM_IFACE_NUMBER/V4/IP | awk '{print $2}'`
+DEVICE_NAME=`netstat -nr | grep default | head -n1 | awk '{print $6}'`
+NETWORK_IFACE=`sudo networksetup -listallhardwareports | grep -C1 $DEVICE_NAME | head -n1 | cut -d' ' -f3-`
+# NAMESERVERS="192.168.3.1"
+# 
+# # -------------------------------------------------------------
+# 
+# # Just so that the script will not ask for passwd
+# # again later when we need to sudo a bunch of times
+sudo echo
+# 
+# Grab original default route
+def_route=`netstat -rn | grep default | head -1 | awk '{ print $2 }'`
+echo $def_route > ~/.def_route
+nameserver=`cat /etc/resolv.conf | egrep '^nameserver ' | head -1 | awk '{ print $2 }'`
+
+echo "Updating DNS and routes..."
+
+# Set nameserver for VPN connection to be the one in /etc/resolv.conf
+sudo networksetup -setdnsservers "$NETWORK_IFACE" $def_route #$NAMESERVERS
+
+destination=$VPN_GATEWAY
+
+route='sudo route'
+
+echo "Deleting default route"
+$route delete default
+echo "Flushing routes"
+$route -n flush
+$route -n flush
+$route -n flush
+$route -n flush
+$route -n flush
+$route -n flush
+$route -n flush
+$route -n flush
+echo "Adding our default route back"
+$route delete 192.168.3.1/32
+$route add default $def_route

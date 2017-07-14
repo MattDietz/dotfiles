@@ -1,0 +1,137 @@
+#
+# Copyright 2017, Cisco Systems
+# All Rights Reserved.
+#
+import logging
+import os
+
+from flask import request
+import flask_login
+import flask_restplus
+from flask_restplus import fields
+
+from tranquility import app
+from tranquility.api import models
+from tranquility.api import registry
+from tranquility.api.v1 import reservations
+
+LOG = logging.getLogger(__name__)
+api = flask_restplus.Namespace(name='Audit', path='/', description='Audit inventory and reservation data')
+
+RESPONSE_SCHEMA = api.model('AuditReservationsResponse', {
+    'owner': fields.String(),
+    'reservation': fields.Nested(reservations.RESPONSE_SCHEMA),
+})
+
+
+@api.route('/audit/reservations', endpoint='audit.reservations')
+class AuditReservations(flask_restplus.Resource):
+    @api.marshal_list_with(RESPONSE_SCHEMA)
+    @flask_login.login_required
+    def get(self):
+        owner = request.args.get("owner")
+        reservation_name = request.args.get("reservation_name")
+        reservation_type = request.args.get("reservation_type")
+
+        user_filters = []
+        res_filters = []
+
+        if owner:
+            user_filters.append(models.User.username == owner)
+
+        if reservation_name:
+            res_filters.append(models.Reservation.name == reservation_name)
+        if reservation_type:
+            res_filters.append(models.Reservation.type == reservation_type)
+
+        users = models.User.query.filter(*user_filters).all()
+
+        reservations_with_owners = []
+        for user in users:
+            res_filters.append(models.Reservation.user_id == user.id)
+            user_reservations = models.Reservation.query.filter(*res_filters)
+            for reservation in user_reservations.all():
+                reservations_with_owners.append(dict(owner=user.username, reservation=reservation))
+        return reservations_with_owners
+
+
+_proxmox_host_reservation_owner = api.model('_ProxmoxHostReservationOwnerInventoryResponse', {
+    'user': fields.String(),
+    'reservations': fields.List(fields.String()),
+})
+
+_proxmox_host_network_device = api.model('_ProxmoxHostNetworkDeviceInventoryResponse', {
+    'name': fields.String(),
+    'bridge': fields.String(),
+})
+
+_network = api.model('_NetworkInventoryResponse', {
+    'name': fields.String(),
+    'gateways': fields.String(),
+    'ipnets': fields.String(),
+    'ipnets_available': fields.Integer(),
+    'ipnets_total': fields.Integer(),
+    'netmask': fields.String(),
+    'vlans': fields.String(),
+})
+_proxmox_host = api.model('_ProxmoxHostInventoryResponse', {
+    'fqdn': fields.String(),
+    'cores': fields.Integer(),
+    'cores_available': fields.Integer(),
+    'memory_gb': fields.Integer(),
+    'memory_gb_available': fields.Integer(),
+    'networks': fields.List(fields.Nested(_network)),
+    'network_devices': fields.List(fields.Nested(_proxmox_host_network_device)),
+    'reservation_owners': fields.List(fields.Nested(_proxmox_host_reservation_owner)),
+    'tags': fields.List(fields.String()),
+    'machine_ids': fields.List(fields.String()),
+})
+
+_baremetal_machine = api.model('_BaremetalMachineInventoryResponse', {
+    'name': fields.String(),
+    'id': fields.String(),
+    'mac': fields.String(),
+    'host': fields.String(),
+    'cores': fields.Integer(),
+    'memory_gb': fields.Integer(),
+    'mgmt_password': fields.String(),
+    'mgmt_username': fields.String(),
+})
+_baremetal_cluster = api.model('_BaremetalClusterInventoryResponse', {
+    'name': fields.String(),
+    'machines': fields.List(fields.Nested(_baremetal_machine)),
+    'networks': fields.List(fields.Nested(_network)),
+    'tags': fields.List(fields.String()),
+    'owned_by': fields.String(),
+})
+_proxmox = api.model('_ProxmoxInventoryResponse', {
+    'hosts': fields.List(fields.Nested(_proxmox_host)),
+    'shared_networks': fields.List(fields.Nested(_network)),
+})
+INVENTORY_RESPONSE_SCHEMA = api.model('AuditInventoryResponse', {
+    'users': fields.List(fields.String()),
+    'proxmox': fields.Nested(_proxmox),
+    'baremetal': fields.List(fields.Nested(_baremetal_cluster))
+})
+
+
+@api.route('/audit/inventory', endpoint='audit.inventory')
+class AuditInventory(flask_restplus.Resource):
+    @api.marshal_with(INVENTORY_RESPONSE_SCHEMA)
+    @flask_login.login_required
+    def get(self):
+        raw_inventory = registry.get_inventory()
+        inventory = raw_inventory.to_serializable()
+        inventory['users'] = [u.username for u in models.User.query.filter_by().all()]
+        return inventory
+
+
+@api.route('/audit/publickeys', endpoint='audit.publickeys')
+class AuditPublicKeys(flask_restplus.Resource):
+    @flask_login.login_required
+    def get(self):
+        user_pubkeys = {}
+        for filename in os.listdir(app.config['SSH_KEY_DIR']):
+            with open(os.path.join(app.config['SSH_KEY_DIR'], filename), 'r') as f:
+                user_pubkeys[filename] = f.read().strip('\n')
+        return user_pubkeys

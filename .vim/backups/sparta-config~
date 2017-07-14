@@ -1,0 +1,11 @@
+Using rhel-atomic-unattended-config-vagrant-7.3.2-1.x86_64.iso
+Host node0
+  HostName 127.0.0.1
+  User admin
+  Port 2222
+  UserKnownHostsFile /dev/null
+  StrictHostKeyChecking no
+  PasswordAuthentication no
+  IdentityFile /Users/matdietz/.ssh/id_rsa
+  LogLevel FATAL
+

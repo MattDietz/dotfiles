@@ -1,0 +1,20 @@
+import libvirt
+import sys
+
+DOMZERO = "Domain-0"
+
+
+def get_virt_info():
+    conn = libvirt.openReadOnly("vbox:///session")
+    if not conn:
+        print "Couldn't open a connection to the hypervisor"
+        sys.exit(1)
+    try:
+        dom0 = conn.lookupByName(DOMZERO)
+        print dom0.ID(), dom0.OSType(), dom0.info()
+    except:
+        print "Failed to find dom0"
+        sys.exit(1)
+
+if __name__ == "__main__":
+    get_virt_info()

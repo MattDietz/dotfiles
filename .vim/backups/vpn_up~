@@ -1,0 +1,20 @@
+VPN_PID=~/.vpn_is_up
+
+if [ -e $VPN_PID ]; then
+  ./cisco_teardown.sh
+  rm $VPN_PID
+fi;
+
+$(vagrant status | grep running 1>/dev/null); if [ $? -eq 1 ]; then vagrant up ; fi
+# Ensure the routing table is always reset before proceeding
+vagrant ssh -c "ps -eaf | grep -v grep | grep vpnc-connect"
+if [ $? -eq 0 ]; then
+  echo "VPNC is running. Resetting the connection"
+  vagrant ssh -c 'sudo vpnc-disconnect'
+fi
+
+vagrant ssh -c 'sudo ./reset_routes.sh'
+~/token.sh; pbpaste | vagrant ssh -c 'sudo vpnc-connect'
+./cisco_split_tunnel.sh
+
+touch ~/.vpn_is_up

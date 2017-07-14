@@ -1,0 +1,17 @@
+FROM registry.access.redhat.com/rhel7-atomic
+MAINTAINER harmony-baremetal@cisco.com
+USER root
+
+COPY requirements /isoservice/requirements
+WORKDIR /isoservice
+
+COPY docker/mime.types /etc/httpd/conf/
+COPY docker/RPM-GPG-KEY-EPEL-7 /etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-7
+COPY docker/redhat.repo /etc/yum.repos.d/sparta-redhat.repo
+RUN microdnf install gcc python2-pip python-devel genisoimage openssl-devel \
+                     p7zip-plugins git && \
+    microdnf clean all && \
+    pip install -r requirements/local.txt
+
+EXPOSE 8000
+ENTRYPOINT ["/isoservice/docker/entrypoint-dev.sh"]

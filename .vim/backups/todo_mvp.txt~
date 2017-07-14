@@ -1,0 +1,88 @@
+Salesforce
+=============
+* Sending emails - https://metacloud.jira.com/browse/CELESTIAL-163
+* Models for extra AZ data - https://metacloud.jira.com/browse/CELESTIAL-184
+* Actual process for streaming data from SFDC into our db - https://metacloud.jira.com/browse/CELESTIAL-189
+  - Either as a manage.py process or a separate app in our cluster I guess? Still don't think the former one is ok
+
+
+Deployment
+=============
+* Setup consul - https://metacloud.jira.com/browse/CELESTIAL-194
+* Setup HAProxy - https://metacloud.jira.com/browse/CELESTIAL-192
+* Setup Eternity with each of the apps - https://metacloud.jira.com/browse/CELESTIAL-195
+* Setup the database - https://metacloud.jira.com/browse/CELESTIAL-196
+
+
+IPXE
+=============
+* Client to interact with it - https://metacloud.jira.com/browse/CELESTIAL-186
+* Monitoring of Bootshop itself - https://metacloud.jira.com/browse/CELESTIAL-164
+
+
+Consul & Service Discovery
+=============
+* Need a client/importable bit of code to register a service with Consul that can be used by all our services
+* Ops CLI should be integrated with said client
+* Monitoring - https://metacloud.jira.com/browse/CELESTIAL-164
+
+
+Database
+=============
+* Replication - https://metacloud.jira.com/browse/CELESTIAL-190
+  - Galera?
+* Backups - https://metacloud.jira.com/browse/CELESTIAL-191
+  - Where? Who do we ship the backups off to?
+* Monitoring - https://metacloud.jira.com/browse/CELESTIAL-164
+
+
+Entitlement
+=============
+* DB Modeling (if necessary) - https://metacloud.jira.com/browse/CELESTIAL-96
+* Monitoring -  https://metacloud.jira.com/browse/CELESTIAL-164
+* Packaging and Deployment
+* Possible separate entitlements-cli for CA interactions
+  # Could be in the entitlements-lib wrapped by the entitlements-cli provided as a subset of the ops-cli
+* Entitlements needs the CA plugin called via the ops-cli
+
+
+Eternity
+=============
+* Configuration of LB Software (ensure SSL termination) - https://metacloud.jira.com/browse/CELESTIAL-192
+* Separate methods in urls in each of the apps for nesting resources
+  - Or just always mount them under the AZ?
+
+
+Config Service
+=============
+* Auth integration - https://metacloud.jira.com/browse/CELESTIAL-187
+* Still missing fields - https://metacloud.jira.com/browse/CELESTIAL-193
+  - Customer status field, active, suspended, what else?
+  - Customer interaction field: have we sent them any emails? Which ones have we sent?
+* Packaging and Deployment - https://metacloud.jira.com/browse/CELESTIAL-164
+* Emailing customers their survey/wizard link - https://metacloud.jira.com/browse/CELESTIAL-163
+  # Could be an email from another service (Mailgun?)
+  # could be an email from ServiceNow
+* Emailing ops to inform them a customer AZ is ready to deploy - https://metacloud.jira.com/browse/CELESTIAL-163
+  # Could be an email from another service (Mailgun?)
+  # could be an email from ServiceNow
+
+
+Ops CLI
+=============
+* sub-client for Entitlements
+* sub-client for IPXE - https://metacloud.jira.com/browse/CELESTIAL-186
+* Distinct sub-client for CA interactions with Entitlements
+* lib for entitlements interaction
+* Auth-integration
+* Consul service discovery integration
+
+
+CI
+=============
+* We need a suite of tests that tests the two major workflows for MVP
+
+
+Configuration & Monitoring
+=============
+* Zabbix integration SPIKE

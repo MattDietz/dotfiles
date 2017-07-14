@@ -1,0 +1,9 @@
+VPN_PID=~/.vpn_is_up
+
+$(vagrant status | grep running 1>/dev/null); if [ $? -eq 1 ]; then vagrant ssh -c 'sudo vpnc-disconnect; sudo ./reset_routes.sh'; fi
+./cisco_teardown.sh
+./cisco_teardown.sh
+./cisco_teardown.sh
+./cisco_teardown.sh
+./cisco_teardown.sh
+rm $VPN_PID
