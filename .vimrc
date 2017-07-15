@@ -103,6 +103,9 @@ set vb t_vb=
 set listchars=trail:.,tab:>-,eol:$
 set nolist
 
+""" Let's F3 toggle paste mode
+set pastetoggle=<F3>
+
 """ Toggle invisible chars
 noremap ,i :set list!<CR>
 
@@ -191,7 +194,6 @@ nnoremap <silent> <F2> :call GenCTags()<cr>
 
 """ Opens the tag under the cursor in a vsplit
 nnoremap <F4> :vsp <cr>:exec("tag ".expand("<cword>"))<cr>
-nnoremap <silent><Leader><C-[> nnoremap <silent><Leader><C-]> <C-w><C-]><C-w>T
 
 """ Opens the tag under the cursor in a horizontal split
 nnoremap <F5> :split <cr>:exec("tag ".expand("<cword>"))<cr>
@@ -284,7 +286,8 @@ inoremap <expr><TAB>  pumvisible() ? "\<C-n>" : "\<TAB>"
 
 """ Airline config
 let g:airline_powerline_fonts = 1
-let g:airline_theme="luna_alt"
+let g:airline_theme='onedark'
+""" let g:airline_theme="luna_alt"
 let g:airline#extensions#syntastic#enabled = 0
 let g:airline#extensions#tabline#enabled = 1
 let g:airline#extensions#tabline#show_buffers = 0

@@ -46,10 +46,10 @@ git_prompt
 
 alias ack='ack --color --group --column'
 alias ls='ls -G'
-alias vim="VIMRUNTIME=/usr/share/vim/vim73 /usr/bin/nvim"
+alias vim="VIMRUNTIME=/usr/share/vim/vim73 /usr/local/bin/nvim"
 
 source /usr/local/bin/virtualenvwrapper.sh
-source <(kubectl completion bash)
+[[ -z `which kubectl` ]] || source <(kubectl completion bash)
 
 export PATH=$PATH:~/go_path/bin
 export GOPATH=~/go_path/
