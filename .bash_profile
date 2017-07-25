@@ -51,5 +51,6 @@ alias vim="VIMRUNTIME=/usr/share/vim/vim73 /usr/local/bin/nvim"
 source /usr/local/bin/virtualenvwrapper.sh
 [[ -z `which kubectl` ]] || source <(kubectl completion bash)
 
-export PATH=$PATH:~/go_path/bin
 export GOPATH=~/go_path/
+export PATH=$PATH:~/$GOPATH/bin
+eval "$(pyenv init -)"
