@@ -1,8 +1,0 @@
-export RESERVATION=solar-eternity-integration
-xena cleanup $RESERVATION
-xena deploy $RESERVATION b/master
-eval $(./xena_inventory $RESERVATION)
-ansible-playbook --inventory-file xena.inventory --become playbook.yml
-ssh admin@eternity-solar.piston.cc
-sudo su
-iptables -A master-filter-post-INPUT -p tcp -d 10.0.0.0/8  -m tcp --dport 80 -j ACCEPT

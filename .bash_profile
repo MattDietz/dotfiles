@@ -46,11 +46,11 @@ git_prompt
 
 alias ack='ack --color --group --column'
 alias ls='ls -G'
-alias vim="VIMRUNTIME=/usr/share/vim/vim73 /usr/local/bin/nvim"
+alias vim="/usr/local/bin/nvim"
 
 source /usr/local/bin/virtualenvwrapper.sh
 [[ -z `which kubectl` ]] || source <(kubectl completion bash)
 
-export GOPATH=~/go_path/
-export PATH=$PATH:~/$GOPATH/bin
+export GOPATH=~/go_path
+export PATH=$PATH:$GOPATH/bin
 eval "$(pyenv init -)"

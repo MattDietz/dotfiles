@@ -1,9 +1,0 @@
-mkisofs -output init.iso -volid cidata -joliet -rock user-data meta-data
-VBoxManage snapshot "Atomic Base" delete Atomic.snapshot
-VBoxManage snapshot "Atomic Base" take Atomic.snapshot
-VBoxManage clonevm "Atomic Base" --snapshot Atomic.snapshot --options link --name atomic-clone --register --basefolder .
-VBoxManage modifyvm atomic-clone --hostonlyadapter2 vboxnet0 --nic2 hostonly --nicpromisc2 allow-vms --cableconnected2 on
-VBoxManage storageattach atomic-clone --storagectl IDE --port 1 --device 0 --type dvddrive --medium ./init.iso
-VBoxManage startvm atomic-clone &
-sleep 20
-ssh centos@192.168.33.100

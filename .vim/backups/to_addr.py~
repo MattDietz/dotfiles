@@ -1,5 +1,0 @@
-import sys
-import netaddr
-
-for addr in sys.stdin.readlines():
-    print "$route -n add -net $destination".format(str(netaddr.IPNetwork(addr)))

@@ -1,5 +1,0 @@
-instance-id: atomic-host002
-local-hostname: netboot-sparta-001
-network-interfaces: |
-    auto enp0s8
-    iface enp0s8 inet dhcp

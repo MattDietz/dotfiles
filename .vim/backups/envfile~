@@ -1,5 +1,0 @@
-TRANQUILITY_REGISTRY ?= registry-write.ci.dfj.io
-TRANQUILITY_NAMESPACE ?= harmony_tranquility
-TRANQUILITY_VERSION = $(shell venv/bin/python setup.py --version)
-SQLALCHEMY_DATABASE_URI ?= mysql+mysqldb://database/tranquility_dev
-SSH_KEY_DIR ?= /authorized_keys/

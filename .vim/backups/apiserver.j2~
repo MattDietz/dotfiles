@@ -1,6 +1,0 @@
-KUBE_ETCD_SERVERS="--etcd_servers=http://{{ hosts[0].host_ip }}:2379"
-KUBE_API_ADDRESS="--insecure-bind-address=0.0.0.0"
-KUBE_SERVICE_ADDRESSES="--service-cluster-ip-range={{ global.cluster_ip_range }}"
-
-KUBE_ADMISSION_CONTROL="--admission-control=NamespaceLifecycle,LimitRanger,ServiceAccount,ResourceQuota --enable-swagger-ui"
-KUBE_API_ARGS="--secure-port=6443 --client-ca-file=/etc/ssl/ca.crt --tls-cert-file=/etc/ssl/server.crt --tls-private-key-file=/etc/ssl/server.key --service-account-key-file=/etc/ssl/server.key --token-auth-file=/etc/ssl/known_tokens.csv"

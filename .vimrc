@@ -1,20 +1,37 @@
-""" Make sure vundle is being used
-set rtp+=~/.vim/bundle/Vundle.vim
-call vundle#begin()
-""" run ":PluginInstall" to install everything defined here
-Plugin 'VundleVim/Vundle.vim'
-Plugin 'vim-airline/vim-airline'
-Plugin 'fatih/vim-go'
-call vundle#end()
+let editor_name='vim'
+if has('nvim')
+  let editor_name='nvim'
+endif
+let g:plugins_location=expand('~/.vim/plugged')
+let gocode_script=g:plugins_location . 'gocode_symlink.sh'
+
+""" run ":PlugInstall" to install everything defined here
+""" run ":PlugUpdate" to update all plugins from source
+""" See https://github.com/junegunn/vim-plug for more details
+call plug#begin()
+Plug 'VundleVim/Vundle.vim'
+Plug 'vim-airline/vim-airline'
+Plug 'vim-airline/vim-airline-themes'
+Plug 'majutsushi/tagbar'
+Plug 'luochen1990/rainbow'
+Plug 'tpope/vim-fugitive'
+Plug 'nathanaelkane/vim-indent-guides'
+Plug 'fatih/vim-go'
+Plug 'vim-syntastic/syntastic'
+Plug 'Shougo/deoplete.nvim', { 'do': ':UpdateRemotePlugins' }
+Plug 'JamshedVesuna/vim-markdown-preview'
+Plug 'ctrlpvim/ctrlp.vim'
+Plug 'nsf/gocode', {'for': 'go', 'rtp': editor_name, 'do': gocode_script } " Go autocompletion
+Plug 'godoctor/godoctor.vim', {'for': 'go'} " Gocode refactoring tool
+Plug 'davidhalter/jedi-vim'
+Plug 'zchee/deoplete-jedi'
+call plug#end()
 
 """ Get out of vi-compatible mode (I'm not sure what this does)
 set nocompatible
 
 """ vim is reading the term type from screen, which ain't xterm.
 set t_Co=256
-
-""" Enable Pathogen
-call pathogen#infect()
 
 """ Turn on coloring
 syntax on
@@ -272,27 +289,19 @@ set statusline+=%*
 hi link LineProximity FoldColumn
 hi link LineOverflow Special
 
-""" Neocomplete config
-""" This is really slow. Need to decide how I feel about this
-""" This requires vim with lua installed:
-""" On mac: brew install vim --with-lua
-let g:acp_enableAtStartup = 0
-let g:neocomplete#enable_at_startup = 1
-let g:neocomplete#enable_smart_case = 1
-let g:neocomplete#sources#syntax#min_keyword_length = 3
-let g:neocomplete#lock_buffer_name_pattern = '\*ku\*'
-
 inoremap <expr><TAB>  pumvisible() ? "\<C-n>" : "\<TAB>"
 
 """ Airline config
 let g:airline_powerline_fonts = 1
-let g:airline_theme='onedark'
-""" let g:airline_theme="luna_alt"
+let g:airline_theme="luna_alt"
 let g:airline#extensions#syntastic#enabled = 0
 let g:airline#extensions#tabline#enabled = 1
 let g:airline#extensions#tabline#show_buffers = 0
 let g:airline#extensions#tabline#show_tabs = 1
 let g:airline#extensions#tabline#formatter = "default"
+
+""" Enable deoplete autocompletion
+let g:deoplete#enable_at_startup = 1
 
 """ vim-go settings
 let g:go_highlight_functions = 1
@@ -332,3 +341,33 @@ let g:tagbar_type_go = {
 	\ 'ctagsbin'  : 'gotags',
 	\ 'ctagsargs' : '-sort -silent'
 \ }
+
+""" Neovim specific settings
+""" if has("nvim")
+"""     " True color support
+"""     set termguicolors
+""" endif
+if exists('+undofile')
+    " undofile -- This allows you to use undos after exiting and
+    "             restarting. NOTE: only present in 7.3+
+    "             :help undo-persistence
+    if isdirectory( $HOME . '/.vim/.undo' ) == 0
+        :silent !mkdir -m 700 -p ~/.vim/.undo > /dev/null 2>&1
+    endif
+    set undodir=~/.vim/.undo
+    set undofile
+endif
+
+" Restore cursor to file position in previous editing session
+function! ResCur()
+if line("'\"") <= line("$")
+    silent! normal! g`"
+    return 1
+endif
+endfunction
+
+
+augroup resCur
+    autocmd!
+    autocmd BufWinEnter * call ResCur()
+augroup END

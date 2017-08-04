@@ -1,8 +1,0 @@
-To use tranquility standalone
-
-The authorized_keys directory mounted inside the container needs to have keys named after the person using them
-ssh-agent also must be running
-  * I have no idea how it was running before and working. I don't start it explicitly
-Should probably have a script to get the correct keys from ssh-agent and ensure they're in the container
-Of course, the whole thing is useless because it ships with the fucking inventory which is static and assumes Cisco stuff
-  * The inventory is read from tranquility/inventory.yaml. If you wanted to use harmonium with your NUC, you would need to replace that.

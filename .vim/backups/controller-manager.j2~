@@ -1,1 +1,0 @@
-KUBE_CONTROLLER_MANAGER_ARGS="--cluster-name={{ global.cluster_domain }} --service-account-private-key-file=/etc/ssl/server.key --kubeconfig=/etc/kubernetes/controller-manager.kubeconfig"

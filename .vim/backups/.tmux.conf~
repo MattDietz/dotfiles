@@ -35,19 +35,29 @@ set -g window-status-current-fg colour15
 
 # Sets vim copy mode keys, and adds yank and vblock bindings
 setw -g mode-keys vi
-bind-key -t vi-copy 'v' begin-selection
-bind-key -t vi-copy 'y' copy-selection
+# bind-key -t vi-copy 'v' begin-selection
+# bind-key -t vi-copy 'y' copy-selection
 
 setw -g monitor-activity on
 set -g visual-activity on
 
-setw -g utf8 on
-set -g status-utf8 on
+# setw -g utf8 on
+# set -g status-utf8 on
 
+# Tmux 1.9 mouse mode
 set -g mouse on
+
+# Pre tmux 1.9 settings
+# set -g mode-mouse on
+# set -g mouse-resize-pane on
+# set -g mouse-select-pane on
+# set -g mouse-select-window on
 
 # Sets the scrollback size
 set -g history-limit 10000
 
-# Doesn't allow tmux to rename the window
-set-option -g allow-rename off
+# Disables the interaction between tmux and neovim
+set -sg escape-time 10
+
+# Fixes issues where a small remote client constrains everyone
+setw -g aggressive-resize on
