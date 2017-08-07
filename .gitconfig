@@ -1,6 +1,7 @@
 [user]
 	name = Matt Dietz
 	email = matthew.dietz@gmail.com
+	signingkey = 9657F0E7
 [color]
 	diff = auto
 	branch = auto
@@ -14,7 +15,7 @@
 [alias]
 	lg = log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr)%Creset %an' --abbrev-commit --date=relative
   lstag = "!f() { for tag in $(git tag); do printf \"%15s\t%s\n\" $tag \"`git show $tag --pretty=format:\"commit: %C(yellow)%h %C(green)%an [%cd] -- %C(cyan)%s %C(green)\" | grep commit | sed 's/commit://' `\";  done; };  f"
-  cleanremote = "!f() { for branch in $(git branch -a | grep $1/ | grep -v master); do echo $branch | cut -d\"/\" -f3 | xargs -i git push $1 :{} ; done; }; f"
 [core]
-  editor = vim
-
+  editor = nvim
+[grep]
+  linenumber = true
