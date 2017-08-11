@@ -1,3 +1,6 @@
+""" Get out of vi-compatible mode (I'm not sure what this does)
+set nocompatible
+
 let editor_name='vim'
 if has('nvim')
   let editor_name='nvim'
@@ -28,9 +31,6 @@ Plug 'zchee/deoplete-jedi'
 Plug 'zchee/deoplete-go', { 'do': 'make'}
 call plug#end()
 
-""" Get out of vi-compatible mode (I'm not sure what this does)
-set nocompatible
-
 """ vim is reading the term type from screen, which ain't xterm.
 set t_Co=256
 
@@ -48,6 +48,9 @@ set backspace=indent,eol,start
 
 """ Turns on line wrapping
 set wrap
+
+""" Turns on line numbers
+set number
 
 """ Threshold for reporting the number of lines changed. Setting it to 0
 """ always reports number of lines changed
@@ -227,6 +230,10 @@ nnoremap <leader>DP :exe ":profile pause"<cr>
 nnoremap <leader>DC :exe ":profile continue"<cr>
 nnoremap <leader>DQ :exe ":profile pause"<cr>:noautocmd qall!<cr>
 
+""" Go plugin shortcuts
+autocmd FileType go nmap <leader>gc  <Plug>(go-callees)
+autocmd FileType go nmap <leader>gi  <Plug>(go-implements)
+
 """ Filetype specifics
 colorscheme onedark
 
@@ -303,6 +310,7 @@ let g:airline#extensions#tabline#formatter = "default"
 
 """ Enable deoplete autocompletion
 let g:deoplete#enable_at_startup = 1
+let g:deoplete#enable_smart_case = 2
 
 """ Deoplete-go settings
 let g:deoplete#sources#go#gocode_binary = $GOPATH.'/bin/gocode'
