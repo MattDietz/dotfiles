@@ -25,6 +25,7 @@ Plug 'nsf/gocode', {'for': 'go', 'rtp': editor_name, 'do': gocode_script } " Go 
 Plug 'godoctor/godoctor.vim', {'for': 'go'} " Gocode refactoring tool
 Plug 'davidhalter/jedi-vim'
 Plug 'zchee/deoplete-jedi'
+Plug 'zchee/deoplete-go', { 'do': 'make'}
 call plug#end()
 
 """ Get out of vi-compatible mode (I'm not sure what this does)
@@ -303,7 +304,11 @@ let g:airline#extensions#tabline#formatter = "default"
 """ Enable deoplete autocompletion
 let g:deoplete#enable_at_startup = 1
 
-""" vim-go settings
+""" Deoplete-go settings
+let g:deoplete#sources#go#gocode_binary = $GOPATH.'/bin/gocode'
+let g:deoplete#sources#go#sort_class = ['package', 'func', 'type', 'var', 'const']
+
+""-go settings
 let g:go_highlight_functions = 1
 let g:go_highlight_methods = 1
 let g:go_highlight_structs = 1
@@ -371,3 +376,6 @@ augroup resCur
     autocmd!
     autocmd BufWinEnter * call ResCur()
 augroup END
+
+
+let g:rainbow_active = 1
