@@ -111,6 +111,9 @@ set wildignore=*.pyc
 """ highlights the opposing paren/bracket when highlighting a paren/bracket
 set showmatch
 
+""" Focus on windows containing buffers instead of opening them in a new
+set switchbuf=useopen
+
 """ Show line and column numbers
 set ruler
 
