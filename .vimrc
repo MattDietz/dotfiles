@@ -22,13 +22,13 @@ Plug 'nathanaelkane/vim-indent-guides'
 Plug 'fatih/vim-go'
 Plug 'vim-syntastic/syntastic'
 Plug 'Shougo/deoplete.nvim', { 'do': ':UpdateRemotePlugins' }
+Plug 'zchee/deoplete-go', { 'do': 'make'}
 Plug 'JamshedVesuna/vim-markdown-preview'
 Plug 'ctrlpvim/ctrlp.vim'
 Plug 'nsf/gocode', {'for': 'go', 'rtp': editor_name, 'do': gocode_script } " Go autocompletion
 Plug 'godoctor/godoctor.vim', {'for': 'go'} " Gocode refactoring tool
 Plug 'davidhalter/jedi-vim'
 Plug 'zchee/deoplete-jedi'
-Plug 'zchee/deoplete-go', { 'do': 'make'}
 call plug#end()
 
 """ vim is reading the term type from screen, which ain't xterm.
@@ -42,6 +42,9 @@ syntax on
 """ autocmd Filetype go     call languagestyles#Go()
 """ autocmd Filetype vim    call languagestyles#Vimscript()
 """ autocmd Filetype python call languagestyles#Python()
+
+""" Vim-go set the quickfix window across the entire bottom (otherwise conflicts with tagbar
+autocmd FileType qf wincmd J
 
 """ Allow vim to backspace over characters added in previous insert sessions
 set backspace=indent,eol,start
@@ -113,6 +116,9 @@ set ruler
 
 """ Resize all windows to keep them the same size when splitting
 set equalalways
+
+""" Open new splits to the right instead of or left
+set splitright
 
 """ Highlights the line containing the cursor
 set cursorline
@@ -218,7 +224,18 @@ nnoremap <F4> :vsp <cr>:exec("tag ".expand("<cword>"))<cr>
 
 """ Opens the tag under the cursor in a horizontal split
 nnoremap <F5> :split <cr>:exec("tag ".expand("<cword>"))<cr>
+
+
+""" Tagbar settings and hacks. This assumes the tagbar is the rightmost split.
+""" Obviously this doesn't work if you change the tagbar to be somewhere else
 nmap <F8> :TagbarToggle<CR>
+fun JumpToRightmost()
+  let lastwin = winnr("$")
+  exe lastwin . " " . "wincmd w"
+endfun
+
+nmap <F9> :call JumpToRightmost()<CR>
+
 
 """ Mapping for the tags list plugin. You need exuberant ctags installed for
 """ this one!
@@ -285,7 +302,13 @@ set laststatus=2
 """ Syntastic settings
 set statusline+=%#warningmsg#
 set statusline+=%{SyntasticStatuslineFlag()}
+
+""" Add current tag to statusline
+set statusline+=%{tagbar#currenttag('[%s]\ ','')}
+
 set statusline+=%*
+
+
 """let g:syntastic_python_checker_args='--builtins=_'
 """let g:syntastic_always_populate_loc_list = 0
 """let g:syntastic_auto_loc_list = 0
