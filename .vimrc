@@ -18,6 +18,7 @@ Plug 'vim-airline/vim-airline-themes'
 Plug 'majutsushi/tagbar'
 Plug 'luochen1990/rainbow'
 Plug 'tpope/vim-fugitive'
+Plug 'tpope/vim-obsession'
 Plug 'nathanaelkane/vim-indent-guides'
 Plug 'fatih/vim-go'
 Plug 'vim-syntastic/syntastic'
@@ -148,8 +149,8 @@ map ,gs :!git status<CR>
 """ git-diff current file
 map ,gdc :!git diff --color %<CR>
 """ git-diff entire tree
-map ,gda :!git diff --color<CR>
-map ,gb :!git blame %<CR>
+map ,gda :Gdiff<CR>
+map ,gb :Gblame<CR>
 map ,gr :!git grep "
 
 """ Quickly change between 2 and 4 spaces
