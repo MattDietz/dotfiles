@@ -76,6 +76,8 @@ set shiftround
 set foldenable
 set foldmarker={,}
 set foldmethod=marker " Fold on the marker
+""" set foldmethod=syntax
+""" set foldmethod=indent
 set foldlevel=100 " Don't automatically fold
 set foldopen=block,hor,mark,percent,quickfix,tag " what movements
 
@@ -130,9 +132,9 @@ set cursorline
 """ Turns off the bell
 set vb t_vb=
 
-""" Invisible character display
-set listchars=trail:.,tab:>-,eol:$
-set nolist
+""" ====[ Make tabs, trailing whitespace, and non-breaking spaces visible ]======
+exec "set listchars=tab:\uBB\uBB,trail:\uB7,nbsp:~"
+set list
 
 """ Let's F3 toggle paste mode
 set pastetoggle=<F3>
@@ -168,6 +170,9 @@ map <Enter> o<ESC>
 
 """ Shortcut for NERDTree
 :noremap ,n :NERDTreeToggle<CR>
+
+""" Remaps // to search for a selected visual block
+vnoremap <expr> // 'y/\V'.escape(@",'\').'<CR>'
 
 """ Cursor Movement - Make cursor move by visual lines instead of file lines (when wrapping)
 map <up> gk
@@ -251,6 +256,26 @@ nnoremap <leader>DP :exe ":profile pause"<cr>
 nnoremap <leader>DC :exe ":profile continue"<cr>
 nnoremap <leader>DQ :exe ":profile pause"<cr>:noautocmd qall!<cr>
 
+" This rewires n and N to do the highlighing...
+nnoremap <silent> n   n:call HLNext(0.4)<cr>
+nnoremap <silent> N   N:call HLNext(0.4)<cr>
+" OR ELSE just highlight the match in red...
+function! HLNext (blinktime)
+    highlight WhiteOnRed ctermfg=white ctermbg=red
+    let [bufnum, lnum, col, off] = getpos('.')
+    let matchlen = strlen(matchstr(strpart(getline('.'),col-1),@/))
+    let target_pat = '\c\%#\%('.@/.'\)'
+    let ring = matchadd('WhiteOnRed', target_pat, 101)
+    redraw
+    exec 'sleep ' . float2nr(a:blinktime * 1000) . 'm'
+    call matchdelete(ring)
+    redraw
+endfunction
+
+""" ====[ Swap : and ; to make colon commands easier to type ]======
+nnoremap  ;  :
+nnoremap  :  ;
+
 """ Go plugin shortcuts
 autocmd FileType go nmap <leader>gc  <Plug>(go-callees)
 autocmd FileType go nmap <leader>gi  <Plug>(go-implements)
@@ -273,6 +298,9 @@ function! Tabstyle_PEP8()
   let w:m1=matchadd('LineProximity', '\%<121v.\%>120v', -1)
   let w:m2=matchadd('LineOverflow', '\%>120v.\+', -1)
 endfunction
+
+highlight ColorColumn ctermbg=magenta
+call matchadd('ColorColumn', '\%81v', 100)
 
 """ Add a couple things if the filetype is Python
 autocmd Filetype python call Tabstyle_PEP8()

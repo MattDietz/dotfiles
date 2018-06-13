@@ -1,4 +1,5 @@
 export ARCHFLAGS="-arch x86_64"
+export TERM=xterm-256color
 
 source ~/.git-completion.bash
 
@@ -56,16 +57,18 @@ alias pymailgun="cd ~/code/python/mailgun"
 
 export GOPATH=~/go_path
 export PATH=$PATH:$GOPATH/bin:~/.devgun/bin:$GOPATH/bin
-eval "$(pyenv init -)"
 
 # Devgun
 export PATH=/Users/cerberus/.devgun/bin:$PATH
 export ETCD_ENDPOINT=http://etcd:2379
 alias cqlsh='/Users/cerberus/.devgun/bin/kubectl exec cassandra-0 --stdin --tty -c cassandra -- bash -xc cqlsh.sh'
-alias etcdctl='kubectl exec etcd-0 -- /etcdctl'
-alias mongo='kubectl exec -it $(kubectl get po -l app=mongo-mongodb -o jsonpath={.items[].metadata.name}) -- mongo'
-alias redis='kubectl exec -it $(kubectl get po -l app=redis -o jsonpath={.items[].metadata.name}) -- redis-cli'
-alias zkCli='kubectl exec zookeeper-0 --stdin --tty -c zookeeper -- /opt/zookeeper/bin/zkCli.sh'
+alias kc='kubectl'
+alias etcdctl='kc exec etcd-0 -- /etcdctl'
+alias mongo='kc exec -it $(kubectl get po -l app=mongodb -o jsonpath={.items[].metadata.name}) -- mongo'
+alias redis='kc exec -it $(kubectl get po -l app=redis -o jsonpath={.items[].metadata.name}) -- redis-cli'
+alias zkCli='kc exec zookeeper-0 --stdin --tty -c zookeeper -- /opt/zookeeper/bin/zkCli.sh'
+
+alias ipython='ptipython'
 
 # Eventbus stuff
 export EVENTBUS_ENDPOINT=kafka-pixy:19091
@@ -80,3 +83,10 @@ function vim() {
     env nvim -c Obsession
   fi
 }
+
+export PYENV_ROOT="$HOME/.pyenv"
+export PATH="$PYENV_ROOT/bin:$PATH"
+eval "$(pyenv init -)"
+
+# . ~/.pyenv/versions/3.6.4/bin/virtualenvwrapper.sh
+export PYENV_VIRTUALENVWRAPPER_PREFER_PYVENV="true"
