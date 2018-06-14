@@ -132,10 +132,6 @@ set cursorline
 """ Turns off the bell
 set vb t_vb=
 
-""" ====[ Make tabs, trailing whitespace, and non-breaking spaces visible ]======
-exec "set listchars=tab:\uBB\uBB,trail:\uB7,nbsp:~"
-set list
-
 """ Let's F3 toggle paste mode
 set pastetoggle=<F3>
 
@@ -295,6 +291,9 @@ match ExtraWhitespace /\s\+$/
 function! Tabstyle_PEP8()
   """ Turns on a highlight column at column 80.
   """ set colorcolumn=80
+  """ ====[ Make tabs, trailing whitespace, and non-breaking spaces visible ]======
+  exec "set listchars=tab:\uBB\uBB,trail:\uB7,nbsp:~"
+  set list
   let w:m1=matchadd('LineProximity', '\%<121v.\%>120v', -1)
   let w:m2=matchadd('LineOverflow', '\%>120v.\+', -1)
 endfunction
