@@ -44,6 +44,9 @@ syntax on
 """ autocmd Filetype vim    call languagestyles#Vimscript()
 """ autocmd Filetype python call languagestyles#Python()
 
+""" Plugins
+filetype plugin on
+
 """ Vim-go set the quickfix window across the entire bottom (otherwise conflicts with tagbar
 autocmd FileType qf wincmd J
 
@@ -138,34 +141,8 @@ set pastetoggle=<F3>
 """ Toggle invisible chars
 noremap ,i :set list!<CR>
 
-""" Reload/edit vimrc easily
-map ,rv :so ~/.vimrc<CR>
-map ,ev :new ~/.vimrc<CR>
-
-""" Handy git commands
-map ,gs :!git status<CR>
-""" git-diff current file
-map ,gdc :!git diff --color %<CR>
-""" git-diff entire tree
-map ,gda :Gdiff<CR>
-map ,gb :Gblame<CR>
-map ,gr :!git grep "
-
-""" Quickly change between 2 and 4 spaces
-map ,sw2 :set ts=2 sw=2<CR>
-map ,sw4 :set ts=4 sw=4<CR>
-
-""" Run ruby syntax checker
-map ,cr :!ruby -c %<CR>
-
-""" Run pep8 checker
-map ,rp8 :!pep8 --repeat %<CR>
-
 """ Allows one to insert newlines without entering insert mode
 map <Enter> o<ESC>
-
-""" Shortcut for NERDTree
-:noremap ,n :NERDTreeToggle<CR>
 
 """ Remaps // to search for a selected visual block
 vnoremap <expr> // 'y/\V'.escape(@",'\').'<CR>'
@@ -178,20 +155,6 @@ map <down> gj
 map j gj
 imap <down> <C-o>gj
 map E ge
-
-if has("cscope")
-    set csprg=~/bin/cscope
-    set csto=0
-    set cst
-    set nocsverb
-    " add any database in current directory
-    if filereadable("cscope.out")
-        cs add cscope.out
-        " else add database pointed to by environment
-    elseif $CSCOPE_DB != ""
-        cs add $CSCOPE_DB
-    endif
-endif
 
 """ Turns on line highlighting for the current cursor location but ensures it's only highlighted in the focused buffer
 augroup CursorLine
@@ -231,15 +194,20 @@ nnoremap <F4> :vsp <cr>:exec("tag ".expand("<cword>"))<cr>
 nnoremap <F5> :split <cr>:exec("tag ".expand("<cword>"))<cr>
 
 
+""" Just straight up stop F1 from opening the help window
+map <F1> <nop>
+imap <F1> <nop>
+
 """ Tagbar settings and hacks. This assumes the tagbar is the rightmost split.
 """ Obviously this doesn't work if you change the tagbar to be somewhere else
-nmap <F8> :TagbarToggle<CR>
+
+nnoremap <F8> :TagbarToggle<CR>
 fun JumpToRightmost()
   let lastwin = winnr("$")
   exe lastwin . " " . "wincmd w"
 endfun
 
-nmap <F9> :call JumpToRightmost()<CR>
+nnoremap <F9> :call JumpToRightmost()<CR>
 
 
 """ Mapping for the tags list plugin. You need exuberant ctags installed for
@@ -255,6 +223,7 @@ nnoremap <leader>DQ :exe ":profile pause"<cr>:noautocmd qall!<cr>
 " This rewires n and N to do the highlighing...
 nnoremap <silent> n   n:call HLNext(0.4)<cr>
 nnoremap <silent> N   N:call HLNext(0.4)<cr>
+
 " OR ELSE just highlight the match in red...
 function! HLNext (blinktime)
     highlight WhiteOnRed ctermfg=white ctermbg=red
@@ -279,8 +248,6 @@ autocmd FileType go nmap <leader>gi  <Plug>(go-implements)
 """ Filetype specifics
 colorscheme onedark
 
-""" Plugins
-filetype plugin on
 
 """ Highlight extra whitespace
 autocmd ColorScheme * highlight ExtraWhitespace ctermbg=red guibg=red
