@@ -263,10 +263,11 @@ function! Tabstyle_PEP8()
   set list
   let w:m1=matchadd('LineProximity', '\%<121v.\%>120v', -1)
   let w:m2=matchadd('LineOverflow', '\%>120v.\+', -1)
+  highlight ColorColumn ctermbg=magenta
+  call matchadd('ColorColumn', '\%81v', 100)
 endfunction
 
-highlight ColorColumn ctermbg=magenta
-call matchadd('ColorColumn', '\%81v', 100)
+
 
 """ Add a couple things if the filetype is Python
 autocmd Filetype python call Tabstyle_PEP8()
