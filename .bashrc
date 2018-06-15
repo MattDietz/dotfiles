@@ -1,5 +1,5 @@
 export ARCHFLAGS="-arch x86_64"
-export TERM=xterm-256color
+export TERM=screen-256color
 
 source ~/.git-completion.bash
 
