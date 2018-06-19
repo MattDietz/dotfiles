@@ -90,3 +90,5 @@ eval "$(pyenv init -)"
 
 # . ~/.pyenv/versions/3.6.4/bin/virtualenvwrapper.sh
 export PYENV_VIRTUALENVWRAPPER_PREFER_PYVENV="true"
+
+pyenv virtualenvwrapper

@@ -255,11 +255,11 @@ highlight ExtraWhitespace ctermbg=red guibg=red
 match ExtraWhitespace /\s\+$/
 
 """ NOTE: This is what highlights after column 80, if enabled
+exec "set listchars=tab:\uBB\uBB,trail:\uB7,nbsp:~"
 function! Tabstyle_PEP8()
   """ Turns on a highlight column at column 80.
   """ set colorcolumn=80
   """ ====[ Make tabs, trailing whitespace, and non-breaking spaces visible ]======
-  exec "set listchars=tab:\uBB\uBB,trail:\uB7,nbsp:~"
   set list
   let w:m1=matchadd('LineProximity', '\%<121v.\%>120v', -1)
   let w:m2=matchadd('LineOverflow', '\%>120v.\+', -1)
