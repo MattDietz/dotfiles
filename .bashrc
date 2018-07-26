@@ -74,6 +74,10 @@ alias ipython='ptipython'
 export EVENTBUS_ENDPOINT=kafka-pixy:19091
 export KAFKA_PIXY_ENDPOINT=kafka-pixy:19091
 
+function watch_pod() {
+  while true; do kubectl get po | grep $1 | grep -iv terminating | awk '{ print $1 }' | xargs kubectl logs -f; done
+}
+
 function vim() {
   if test $# -gt 0; then
     env nvim "$@"
@@ -88,7 +92,5 @@ export PYENV_ROOT="$HOME/.pyenv"
 export PATH="$PYENV_ROOT/bin:$PATH"
 eval "$(pyenv init -)"
 
-# . ~/.pyenv/versions/3.6.4/bin/virtualenvwrapper.sh
 export PYENV_VIRTUALENVWRAPPER_PREFER_PYVENV="true"
-
 pyenv virtualenvwrapper
