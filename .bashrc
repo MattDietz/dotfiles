@@ -43,40 +43,15 @@ PS4='+ '
 }
 git_prompt
 
-[[ -s "$HOME/.rvm/scripts/rvm" ]] && . "$HOME/.rvm/scripts/rvm"
-
 alias ack='ack --color --group --column'
 alias ls='ls -G'
-# alias vim="/usr/local/bin/nvim"
-alias gomailgun="cd ~/go_path/src/github.com/mailgun"
-alias pymailgun="cd ~/code/python/mailgun"
 
-#source /usr/local/bin/virtualenvwrapper.sh
-#source /Users/cerberus/.pyenv/shims/virtualenvwrapper.sh
 [[ -z `which kubectl` ]] || source <(kubectl completion bash)
 
 export GOPATH=~/go_path
 export PATH=$PATH:$GOPATH/bin:~/.devgun/bin:$GOPATH/bin
 
-# Devgun
-export PATH=/Users/cerberus/.devgun/bin:$PATH
-export ETCD_ENDPOINT=http://etcd:2379
-alias cqlsh='/Users/cerberus/.devgun/bin/kubectl exec cassandra-0 --stdin --tty -c cassandra -- bash -xc cqlsh.sh'
-alias kc='kubectl'
-alias etcdctl='kc exec etcd-0 -- /etcdctl'
-alias mongo='kc exec -it $(kubectl get po -l app=mongodb -o jsonpath={.items[].metadata.name}) -- mongo'
-alias redis='kc exec -it $(kubectl get po -l app=redis -o jsonpath={.items[].metadata.name}) -- redis-cli'
-alias zkCli='kc exec zookeeper-0 --stdin --tty -c zookeeper -- /opt/zookeeper/bin/zkCli.sh'
-
 alias ipython='ptipython'
-
-# Eventbus stuff
-export EVENTBUS_ENDPOINT=kafka-pixy:19091
-export KAFKA_PIXY_ENDPOINT=kafka-pixy:19091
-
-function watch_pod() {
-  while true; do kubectl get po | grep $1 | grep -iv terminating | awk '{ print $1 }' | xargs kubectl logs -f; done
-}
 
 function vim() {
   if test $# -gt 0; then
@@ -94,3 +69,5 @@ eval "$(pyenv init -)"
 
 export PYENV_VIRTUALENVWRAPPER_PREFER_PYVENV="true"
 pyenv virtualenvwrapper
+
+[ -f ~/.localrc ] && source ~/.localrc
