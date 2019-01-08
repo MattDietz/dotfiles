@@ -365,6 +365,14 @@ let g:tagbar_type_go = {
 	\ 'ctagsargs' : '-sort -silent'
 \ }
 
+function! s:go_guru_scope_from_git_root()
+  let gitroot = system("git rev-parse --show-toplevel | tr -d '\n'")
+  let pattern = escape(go#util#gopath() . "/src/", '\ /')
+  return substitute(gitroot, pattern, "", "") . "/... -vendor/"
+endfunction
+
+au FileType go silent exe "GoGuruScope " . s:go_guru_scope_from_git_root()
+
 """ Neovim specific settings
 """ if has("nvim")
 """     " True color support
