@@ -20,13 +20,13 @@ Plug 'luochen1990/rainbow'
 Plug 'tpope/vim-fugitive'
 Plug 'tpope/vim-obsession'
 Plug 'nathanaelkane/vim-indent-guides'
-Plug 'fatih/vim-go'
+Plug 'fatih/vim-go', { 'do': ':GoUpdateBinaries' }
 Plug 'vim-syntastic/syntastic'
 Plug 'Shougo/deoplete.nvim', { 'do': ':UpdateRemotePlugins' }
 Plug 'zchee/deoplete-go', { 'do': 'make'}
 Plug 'JamshedVesuna/vim-markdown-preview'
 Plug 'ctrlpvim/ctrlp.vim'
-Plug 'nsf/gocode', {'for': 'go', 'rtp': editor_name, 'do': gocode_script } " Go autocompletion
+Plug 'mdempsky/gocode', {'for': 'go', 'rtp': editor_name, 'do': gocode_script } " Go autocompletion
 Plug 'godoctor/godoctor.vim', {'for': 'go'} " Gocode refactoring tool
 Plug 'davidhalter/jedi-vim'
 Plug 'zchee/deoplete-jedi'
