@@ -63,6 +63,18 @@ function vim() {
   fi
 }
 
+function goplay() {
+  cat > ./play.go <<- EOM
+package main
+
+import "fmt"
+
+func main() {
+  fmt.Println("hello!")
+}
+EOM
+}
+
 export PYENV_ROOT="$HOME/.pyenv"
 export PATH="$PYENV_ROOT/bin:$PATH"
 eval "$(pyenv init -)"
