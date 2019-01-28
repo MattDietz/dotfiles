@@ -16,6 +16,7 @@ Plug 'VundleVim/Vundle.vim'
 Plug 'vim-airline/vim-airline'
 Plug 'vim-airline/vim-airline-themes'
 Plug 'majutsushi/tagbar'
+Plug 'jodosha/vim-godebug'
 Plug 'luochen1990/rainbow'
 Plug 'tpope/vim-fugitive'
 Plug 'tpope/vim-obsession'
@@ -29,6 +30,7 @@ Plug 'ctrlpvim/ctrlp.vim'
 Plug 'mdempsky/gocode', {'for': 'go', 'rtp': editor_name, 'do': gocode_script } " Go autocompletion
 Plug 'godoctor/godoctor.vim', {'for': 'go'} " Gocode refactoring tool
 Plug 'davidhalter/jedi-vim'
+Plug 'altercation/vim-colors-solarized'
 Plug 'zchee/deoplete-jedi'
 call plug#end()
 
@@ -135,9 +137,6 @@ set cursorline
 """ Turns off the bell
 set vb t_vb=
 
-""" Let's F3 toggle paste mode
-set pastetoggle=<F3>
-
 """ Toggle invisible chars
 noremap ,i :set list!<CR>
 
@@ -186,13 +185,6 @@ endfun
 set tags=~/.ctags/python_std_lib,~/.ctags/python_usr_lib,tags;$HOME
 
 nnoremap <silent> <F2> :call GenCTags()<cr>
-
-""" Opens the tag under the cursor in a vsplit
-nnoremap <F4> :vsp <cr>:exec("tag ".expand("<cword>"))<cr>
-
-""" Opens the tag under the cursor in a horizontal split
-nnoremap <F5> :split <cr>:exec("tag ".expand("<cword>"))<cr>
-
 
 """ Just straight up stop F1 from opening the help window
 map <F1> <nop>
@@ -245,9 +237,24 @@ nnoremap  :  ;
 autocmd FileType go nmap <leader>gc  <Plug>(go-callees)
 autocmd FileType go nmap <leader>gi  <Plug>(go-implements)
 
-""" Filetype specifics
+""" Set up background color toggle
 colorscheme onedark
 
+fun BackgroundToggle()
+  if g:colors_name == "onedark"
+    set background=light
+    colorscheme solarized
+    :AirlineTheme solarized
+  else
+    colorscheme onedark
+    :AirlineTheme luna_alt
+  endif
+endfun
+
+nnoremap <F4> :call BackgroundToggle()<CR>
+
+
+""" Filetype specifics
 
 """ Highlight extra whitespace
 autocmd ColorScheme * highlight ExtraWhitespace ctermbg=red guibg=red
