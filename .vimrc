@@ -17,7 +17,6 @@ Plug 'vim-airline/vim-airline'
 Plug 'vim-airline/vim-airline-themes'
 Plug 'majutsushi/tagbar'
 Plug 'jodosha/vim-godebug'
-Plug 'luochen1990/rainbow'
 Plug 'tpope/vim-fugitive'
 Plug 'tpope/vim-obsession'
 Plug 'nathanaelkane/vim-indent-guides'
@@ -32,7 +31,6 @@ Plug 'godoctor/godoctor.vim', {'for': 'go'} " Gocode refactoring tool
 Plug 'davidhalter/jedi-vim'
 Plug 'altercation/vim-colors-solarized'
 Plug 'zchee/deoplete-jedi'
-Plug 'rizzatti/dash.vim'
 call plug#end()
 
 """ vim is reading the term type from screen, which ain't xterm.
@@ -280,6 +278,9 @@ endfunction
 """ Add a couple things if the filetype is Python
 autocmd Filetype python call Tabstyle_PEP8()
 
+""" Set .peg files to be highlighted as Go
+au BufNewFile,BufRead,BufReadPost *.peg set syntax=Go
+
 """ Never use tabs
 """ I think this setting is breaking pasting into Vim, resetting spaces back to tabs
 """ set softtabstop=2
@@ -412,7 +413,50 @@ augroup resCur
 augroup END
 
 
-let g:rainbow_active = 1
+" HEX MODE!!!!
+nnoremap <C-H> :Hexmode<CR>
+inoremap <C-H> <Esc>:Hexmode<CR>
+vnoremap <C-H> :<C-U>Hexmode<CR>
 
-""" Map key for Dash plugin
-nmap <silent> <C-\> <Plug>DashSearch
+" ex command for toggling hex mode - define mapping if desired
+command -bar Hexmode call ToggleHex()
+
+" helper function to toggle hex mode
+function ToggleHex()
+  " hex mode should be considered a read-only operation
+  " save values for modified and read-only for restoration later,
+  " and clear the read-only flag for now
+  let l:modified=&mod
+  let l:oldreadonly=&readonly
+  let &readonly=0
+  let l:oldmodifiable=&modifiable
+  let &modifiable=1
+  if !exists("b:editHex") || !b:editHex
+    " save old options
+    let b:oldft=&ft
+    let b:oldbin=&bin
+    " set new options
+    setlocal binary " make sure it overrides any textwidth, etc.
+    silent :e " this will reload the file without trickeries
+              "(DOS line endings will be shown entirely )
+    let &ft="xxd"
+    " set status
+    let b:editHex=1
+    " switch to hex editor
+    %!xxd
+  else
+    " restore old options
+    let &ft=b:oldft
+    if !b:oldbin
+      setlocal nobinary
+    endif
+    " set status
+    let b:editHex=0
+    " return to normal editing
+    %!xxd -r
+  endif
+  " restore values for modified and read only state
+  let &mod=l:modified
+  let &readonly=l:oldreadonly
+  let &modifiable=l:oldmodifiable
+endfunction
