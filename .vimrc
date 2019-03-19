@@ -32,6 +32,7 @@ Plug 'godoctor/godoctor.vim', {'for': 'go'} " Gocode refactoring tool
 Plug 'davidhalter/jedi-vim'
 Plug 'altercation/vim-colors-solarized'
 Plug 'zchee/deoplete-jedi'
+Plug 'rizzatti/dash.vim'
 call plug#end()
 
 """ vim is reading the term type from screen, which ain't xterm.
@@ -412,3 +413,6 @@ augroup END
 
 
 let g:rainbow_active = 1
+
+""" Map key for Dash plugin
+nmap <silent> <C-\> <Plug>DashSearch
