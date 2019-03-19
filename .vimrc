@@ -31,6 +31,7 @@ Plug 'godoctor/godoctor.vim', {'for': 'go'} " Gocode refactoring tool
 Plug 'davidhalter/jedi-vim'
 Plug 'altercation/vim-colors-solarized'
 Plug 'zchee/deoplete-jedi'
+Plug 'rizzatti/dash.vim'
 call plug#end()
 
 """ vim is reading the term type from screen, which ain't xterm.
@@ -278,8 +279,7 @@ endfunction
 """ Add a couple things if the filetype is Python
 autocmd Filetype python call Tabstyle_PEP8()
 
-""" Set .peg files to be highlighted as Go
-au BufNewFile,BufRead,BufReadPost *.peg set syntax=Go
+
 
 """ Never use tabs
 """ I think this setting is breaking pasting into Vim, resetting spaces back to tabs
@@ -460,3 +460,11 @@ function ToggleHex()
   let &readonly=l:oldreadonly
   let &modifiable=l:oldmodifiable
 endfunction
+
+""" Map key for Dash plugin
+nmap <silent> <C-\> <Plug>DashSearch
+""" Set .peg files to be highlighted as Go
+au BufNewFile,BufRead,BufReadPost *.peg set filetype=peg syntax=Go
+let g:dash_map = {
+        \ 'peg' : ['go', 'godoc']
+        \ }
