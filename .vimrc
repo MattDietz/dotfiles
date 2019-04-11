@@ -237,21 +237,7 @@ nnoremap  :  ;
 autocmd FileType go nmap <leader>gc  <Plug>(go-callees)
 autocmd FileType go nmap <leader>gi  <Plug>(go-implements)
 
-""" Set up background color toggle
-colorscheme onedark
 
-fun BackgroundToggle()
-  if g:colors_name == "onedark"
-    set background=light
-    colorscheme solarized
-    :AirlineTheme solarized
-  else
-    colorscheme onedark
-    :AirlineTheme luna_alt
-  endif
-endfun
-
-nnoremap <F4> :call BackgroundToggle()<CR>
 
 
 """ Filetype specifics
@@ -274,12 +260,8 @@ function! Tabstyle_PEP8()
   call matchadd('ColorColumn', '\%81v', 100)
 endfunction
 
-
-
 """ Add a couple things if the filetype is Python
 autocmd Filetype python call Tabstyle_PEP8()
-
-
 
 """ Never use tabs
 """ I think this setting is breaking pasting into Vim, resetting spaces back to tabs
@@ -303,15 +285,6 @@ set statusline+=%{SyntasticStatuslineFlag()}
 set statusline+=%{tagbar#currenttag('[%s]\ ','')}
 
 set statusline+=%*
-
-
-"""let g:syntastic_python_checker_args='--builtins=_'
-"""let g:syntastic_always_populate_loc_list = 0
-"""let g:syntastic_auto_loc_list = 0
-"""let g:syntastic_check_on_open = 1
-"""let g:syntastic_check_on_wq = 0
-"""let g:syntastic_auto_jump = 0
-"""let g:syntastic_ignore_files = ['\m^/usr/include/', '\m\c\.h$', '.tox/', '.pip/', '.venv']
 
 hi link LineProximity FoldColumn
 hi link LineOverflow Special
@@ -463,8 +436,38 @@ endfunction
 
 """ Map key for Dash plugin
 nmap <silent> <C-\> <Plug>DashSearch
+"""au BufRead,BufNewFile *.peg set filetype=go
 """ Set .peg files to be highlighted as Go
 au BufNewFile,BufRead,BufReadPost *.peg set filetype=peg syntax=Go
 let g:dash_map = {
         \ 'peg' : ['go', 'godoc']
         \ }
+
+""" Set up background color toggle
+""" colorscheme onedark
+let color_toggle = 2
+
+""" I can't figure out how to get the airline theme command to not flip out
+""" when launch VIM so pick a sane default here and just switch later
+colorscheme papercolor
+
+fun BackgroundToggle()
+  if g:color_toggle == 0
+    set background=light
+    colorscheme papercolor
+    execute "AirlineTheme solarized"
+    let g:color_toggle += 1
+  elseif g:color_toggle == 1
+    set background=dark
+    colorscheme papercolor
+    execute "AirlineTheme luna_alt"
+    let g:color_toggle += 1
+  elseif g:color_toggle == 2
+    set background=dark
+    colorscheme onedark
+    execute "AirlineTheme luna_alt"
+    let g:color_toggle = 0
+  endif
+endfun
+
+nnoremap <F4> :call BackgroundToggle()<CR>
