@@ -113,8 +113,8 @@ set ignorecase
 set wildmenu
 set wildmode=list:longest,full
 
-""" File patterns to ignore
-set wildignore=*.pyc
+""" File patterns to ignore (also controls what Ctrlp.vim can see)
+set wildignore=*.pyc,*/tmp/*,*.so,*.swp,*.zip,node_modules/*
 
 """ highlights the opposing paren/bracket when highlighting a paren/bracket
 set showmatch
@@ -237,7 +237,8 @@ nnoremap  :  ;
 autocmd FileType go nmap <leader>gc  <Plug>(go-callees)
 autocmd FileType go nmap <leader>gi  <Plug>(go-implements)
 
-
+""" Ctrlp settings
+let g:ctrlp_user_command = ['.git', 'cd %s && git ls-files -co --exclude-standard']
 
 
 """ Filetype specifics
@@ -302,7 +303,7 @@ let g:airline#extensions#tabline#formatter = "default"
 
 """ Enable deoplete autocompletion
 let g:deoplete#enable_at_startup = 1
-let g:deoplete#enable_smart_case = 2
+call deoplete#custom#option('enable_smart_case', 2)
 
 """ Deoplete-go settings
 let g:deoplete#sources#go#gocode_binary = $GOPATH.'/bin/gocode'
