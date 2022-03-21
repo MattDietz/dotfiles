@@ -1,11 +1,4 @@
 let g:netrw_dirhistmax  =10
-let g:netrw_dirhist_cnt =9
-let g:netrw_dirhist_1='/Users/cerberus/code/python/scoundrel/scoundrel'
-let g:netrw_dirhist_2='/Users/cerberus/code/python/scoundrel'
-let g:netrw_dirhist_3='/Users/cerberus/code/python/scoundrel/scoundrel'
-let g:netrw_dirhist_4='/Users/cerberus/code/python/scoundrel'
-let g:netrw_dirhist_5='/Users/cerberus/code/python/scoundrel/scoundrel'
-let g:netrw_dirhist_6='/Users/cerberus/.vim/colors'
-let g:netrw_dirhist_7='/Users/cerberus/code/python/neutron/neutron/plugins'
-let g:netrw_dirhist_8='/Users/cerberus/code/python/lifeloopweb/tests/unit'
-let g:netrw_dirhist_9='/Users/cerberus/code/python/lifeloopweb/lifeloopweb'
+let g:netrw_dirhistcnt =2
+let g:netrw_dirhist_2='/Users/MDietz/code/python/mailgun/argus/argus'
+let g:netrw_dirhist_1='/Users/MDietz/code/python/mailgun/argus'

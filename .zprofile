@@ -1,10 +1,10 @@
 eval "$(/opt/homebrew/bin/brew shellenv)"
 
 # PYENV
-ARCH=`arch`
+ARCH="arm64"
 
 export PYENV_ROOT="$HOME/.pyenv"
-export PATH="$PYENV_ROOT/bin:$PATH"
+export PATH="/opt/homebrew/lib:$PYENV_ROOT/bin:$PATH"
 export VIRTUALENVWRAPPER_SCRIPT=/opt/homebrew/bin/virtualenvwrapper.sh
 source /opt/homebrew/bin/virtualenvwrapper_lazy.sh
 eval "$(pyenv init -)"
@@ -16,12 +16,15 @@ export PYENV_SHELL=zsh
 # export PYENV_ROOT=$(pyenv root)
 # export PYENV_VERSION=$(pyenv version-name)
 export PYTHONPATH=$PYENV_ROOT/shims
+export LIBRARY_PATH="$LIBRARY_PATH:$(brew --prefix)/lib"
+export DYLD_LIBRARY_PATH="$DYLD_LIBRARY_PATH:/opt/homebrew/lib"
 
 SDK_PATH="$(xcrun --show-sdk-path)"
 export CPATH="${SDK_PATH}/usr/include"
 export CFLAGS="-I${SDK_PATH}/usr/include/sasl $CFLAGS"
-export CFLAGS="-I${SDK_PATH}/usr/include $CFLAGS"
-export LDFLAGS="-L${SDK_PATH}/usr/lib $LDFLAGS"
+export CFLAGS="-I/opt/homebrew/opt/openssl@1.1/include -I${SDK_PATH}/usr/include $CFLAGS"
+export CPPFLAGS="-I/opt/homebrew/opt/openssl@1.1/include -I/usr/local/opt/openssl/include"
+export LDFLAGS="-L/opt/homebrew/lib -L/opt/homebrew/opt/openssl@1.1/lib -L${SDK_PATH}/usr/lib $LDFLAGS"
 
 if [[ "${ARCH}"  == "arm64" ]]; then
     PREFIX="/opt/homebrew/opt"
@@ -86,6 +89,9 @@ EOM
 }
 
 export VISUAL="vim"
-alias dsp="docker system prune"
+alias dsp="docker system prune -f"
+
+# Don't share history between terms, makes tmux less of a PITA
+setopt nosharehistory
 
 [ -f ~/.localrc ] && source ~/.localrc

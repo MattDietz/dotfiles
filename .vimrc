@@ -1,50 +1,38 @@
-""" Get out of vi-compatible mode (I'm not sure what this does)
-set nocompatible
-
 let editor_name='vim'
 if has('nvim')
   let editor_name='nvim'
 endif
 let g:plugins_location=expand('~/.vim/plugged')
-let gocode_script=g:plugins_location . 'gocode_symlink.sh'
 
 """ run ":PlugInstall" to install everything defined here
 """ run ":PlugUpdate" to update all plugins from source
 """ See https://github.com/junegunn/vim-plug for more details
 call plug#begin()
 Plug 'VundleVim/Vundle.vim'
+Plug 'fatih/vim-go', { 'do': ':GoUpdateBinaries' }
+Plug 'Shougo/deoplete.nvim', { 'do': ':UpdateRemotePlugins' }
 Plug 'vim-airline/vim-airline'
 Plug 'vim-airline/vim-airline-themes'
+Plug 'neovim/nvim-lspconfig'
 Plug 'majutsushi/tagbar'
-Plug 'jodosha/vim-godebug'
 Plug 'tpope/vim-fugitive'
 Plug 'tpope/vim-obsession'
 Plug 'nathanaelkane/vim-indent-guides'
-Plug 'fatih/vim-go', { 'do': ':GoUpdateBinaries' }
 Plug 'vim-syntastic/syntastic'
-Plug 'Shougo/deoplete.nvim', { 'do': ':UpdateRemotePlugins' }
-Plug 'zchee/deoplete-go', { 'do': 'make'}
-Plug 'JamshedVesuna/vim-markdown-preview'
 Plug 'ctrlpvim/ctrlp.vim'
-Plug 'mdempsky/gocode', {'for': 'go', 'rtp': editor_name, 'do': gocode_script } " Go autocompletion
-Plug 'godoctor/godoctor.vim', {'for': 'go'} " Gocode refactoring tool
 Plug 'davidhalter/jedi-vim'
 Plug 'altercation/vim-colors-solarized'
-Plug 'zchee/deoplete-jedi'
 Plug 'rizzatti/dash.vim'
 call plug#end()
+
+""" Load Go specific configs
+source ~/.vim/go.vim
 
 """ vim is reading the term type from screen, which ain't xterm.
 set t_Co=256
 
 """ Turn on coloring
 syntax on
-
-""" Language specifid settings
-""" autocmd Filetype c      call languagestyles#C()
-""" autocmd Filetype go     call languagestyles#Go()
-""" autocmd Filetype vim    call languagestyles#Vimscript()
-""" autocmd Filetype python call languagestyles#Python()
 
 """ Plugins
 filetype plugin on
@@ -163,19 +151,20 @@ augroup CursorLine
 augroup END
 
 """ Borrowed and adapted from github.com/tr3buchet
-fun GenPythonCTags()
-  let result = system('ctags -R -f ~/.ctags/python_usr_lib /usr/local/lib/python2.7')
-  let result = system('ctags -R -f ~/.ctags/python_std_lib /usr/lib/python2.7')
-  echo "Finished generating python ctags"
-endfun
+""" fun GenPythonCTags()
+"""   let result = system('ctags -R -f ~/.ctags/python_usr_lib /usr/local/lib/python2.7')
+"""   let result = system('ctags -R -f ~/.ctags/python_std_lib /usr/lib/python2.7')
+"""   echo "Finished generating python ctags"
+""" endfun
 
+""" Install universal-ctags for better ctags support
 fun GenCTags()
   let path = system('git rev-parse --show-toplevel | tr -d "\n"')
   if v:shell_error
     echo "not a git or bzr repo"
     return 0
   endif
-  let exec_str = 'cd ' . path . ' && ctags --exclude=*git* --exclude=*tox* -R -f ' . path . '/tags ' . path
+  let exec_str = 'cd ' . path . ' && ctags --exclude=git --exclude=tox -R -f ' . path . '/tags ' . path . ' *'
   let result = system(exec_str)
   echo result
   echo "Generated tags completed. Tags file placed in " . path
@@ -266,7 +255,7 @@ autocmd Filetype python call Tabstyle_PEP8()
 
 """ Never use tabs
 """ I think this setting is breaking pasting into Vim, resetting spaces back to tabs
-""" set softtabstop=2
+set softtabstop=2
 set shiftwidth=2
 set tabstop=2
 set expandtab
@@ -301,60 +290,45 @@ let g:airline#extensions#tabline#show_buffers = 0
 let g:airline#extensions#tabline#show_tabs = 1
 let g:airline#extensions#tabline#formatter = "default"
 
-""" Enable deoplete autocompletion
-let g:deoplete#enable_at_startup = 1
-call deoplete#custom#option('enable_smart_case', 2)
-
-""" Deoplete-go settings
-let g:deoplete#sources#go#gocode_binary = $GOPATH.'/bin/gocode'
-let g:deoplete#sources#go#sort_class = ['package', 'func', 'type', 'var', 'const']
-
-""-go settings
-let g:go_highlight_functions = 1
-let g:go_highlight_methods = 1
-let g:go_highlight_structs = 1
-let g:go_highlight_interfaces = 1
-let g:go_highlight_operators = 1
-let g:go_highlight_build_constraints = 1
 """ Sets the "old" syntax highlighting engine for vim-go: https://github.com/fatih/vim-go/issues/72
-set re=1
+""" set re=1
 
 """ Vim-go settings
-let g:tagbar_type_go = {
-	\ 'ctagstype' : 'go',
-	\ 'kinds'     : [
-		\ 'p:package',
-		\ 'i:imports:1',
-		\ 'c:constants',
-		\ 'v:variables',
-		\ 't:types',
-		\ 'n:interfaces',
-		\ 'w:fields',
-		\ 'e:embedded',
-		\ 'm:methods',
-		\ 'r:constructor',
-		\ 'f:functions'
-	\ ],
-	\ 'sro' : '.',
-	\ 'kind2scope' : {
-		\ 't' : 'ctype',
-		\ 'n' : 'ntype'
-	\ },
-	\ 'scope2kind' : {
-		\ 'ctype' : 't',
-		\ 'ntype' : 'n'
-	\ },
-	\ 'ctagsbin'  : 'gotags',
-	\ 'ctagsargs' : '-sort -silent'
-\ }
+""" let g:tagbar_type_go = {
+""" 	\ 'ctagstype' : 'go',
+""" 	\ 'kinds'     : [
+""" 		\ 'p:package',
+""" 		\ 'i:imports:1',
+""" 		\ 'c:constants',
+""" 		\ 'v:variables',
+""" 		\ 't:types',
+""" 		\ 'n:interfaces',
+""" 		\ 'w:fields',
+""" 		\ 'e:embedded',
+""" 		\ 'm:methods',
+""" 		\ 'r:constructor',
+""" 		\ 'f:functions'
+""" 	\ ],
+""" 	\ 'sro' : '.',
+""" 	\ 'kind2scope' : {
+""" 		\ 't' : 'ctype',
+""" 		\ 'n' : 'ntype'
+""" 	\ },
+""" 	\ 'scope2kind' : {
+""" 		\ 'ctype' : 't',
+""" 		\ 'ntype' : 'n'
+""" 	\ },
+""" 	\ 'ctagsbin'  : 'gotags',
+""" 	\ 'ctagsargs' : '-sort -silent'
+""" \ }
 
-function! s:go_guru_scope_from_git_root()
-  let gitroot = system("git rev-parse --show-toplevel | tr -d '\n'")
-  let pattern = escape(go#util#gopath() . "/src/", '\ /')
-  return substitute(gitroot, pattern, "", "") . "/... -vendor/"
-endfunction
-
-au FileType go silent exe "GoGuruScope " . s:go_guru_scope_from_git_root()
+""" function! s:go_guru_scope_from_git_root()
+"""   let gitroot = system("git rev-parse --show-toplevel | tr -d '\n'")
+"""   let pattern = escape(go#util#gopath() . "/src/", '\ /')
+"""   return substitute(gitroot, pattern, "", "") . "/... -vendor/"
+""" endfunction
+""" 
+""" au FileType go silent exe "GoGuruScope " . s:go_guru_scope_from_git_root()
 
 """ Neovim specific settings
 """ if has("nvim")
