@@ -8,7 +8,6 @@ let g:plugins_location=expand('~/.vim/plugged')
 """ run ":PlugUpdate" to update all plugins from source
 """ See https://github.com/junegunn/vim-plug for more details
 call plug#begin()
-Plug 'VundleVim/Vundle.vim'
 Plug 'fatih/vim-go', { 'do': ':GoUpdateBinaries' }
 Plug 'Shougo/deoplete.nvim', { 'do': ':UpdateRemotePlugins' }
 Plug 'vim-airline/vim-airline'
@@ -23,6 +22,8 @@ Plug 'ctrlpvim/ctrlp.vim'
 Plug 'davidhalter/jedi-vim'
 Plug 'altercation/vim-colors-solarized'
 Plug 'rizzatti/dash.vim'
+Plug 'ruanyl/vim-gh-line'
+Plug 'github/copilot.vim'
 call plug#end()
 
 """ Load Go specific configs
@@ -283,7 +284,7 @@ inoremap <expr><TAB>  pumvisible() ? "\<C-n>" : "\<TAB>"
 
 """ Airline config
 let g:airline_powerline_fonts = 1
-let g:airline_theme="luna_alt"
+let g:airline_theme="luna"
 let g:airline#extensions#syntastic#enabled = 0
 let g:airline#extensions#tabline#enabled = 1
 let g:airline#extensions#tabline#show_buffers = 0
@@ -294,41 +295,89 @@ let g:airline#extensions#tabline#formatter = "default"
 """ set re=1
 
 """ Vim-go settings
-""" let g:tagbar_type_go = {
-""" 	\ 'ctagstype' : 'go',
-""" 	\ 'kinds'     : [
-""" 		\ 'p:package',
-""" 		\ 'i:imports:1',
-""" 		\ 'c:constants',
-""" 		\ 'v:variables',
-""" 		\ 't:types',
-""" 		\ 'n:interfaces',
-""" 		\ 'w:fields',
-""" 		\ 'e:embedded',
-""" 		\ 'm:methods',
-""" 		\ 'r:constructor',
-""" 		\ 'f:functions'
-""" 	\ ],
-""" 	\ 'sro' : '.',
-""" 	\ 'kind2scope' : {
-""" 		\ 't' : 'ctype',
-""" 		\ 'n' : 'ntype'
-""" 	\ },
-""" 	\ 'scope2kind' : {
-""" 		\ 'ctype' : 't',
-""" 		\ 'ntype' : 'n'
-""" 	\ },
-""" 	\ 'ctagsbin'  : 'gotags',
-""" 	\ 'ctagsargs' : '-sort -silent'
-""" \ }
+let g:tagbar_type_go = {
+	\ 'ctagstype' : 'go',
+	\ 'kinds'     : [
+		\ 'p:package',
+		\ 'i:imports:1',
+		\ 'c:constants',
+		\ 'v:variables',
+		\ 't:types',
+		\ 'n:interfaces',
+		\ 'w:fields',
+		\ 'e:embedded',
+		\ 'm:methods',
+		\ 'r:constructor',
+		\ 'f:functions'
+	\ ],
+	\ 'sro' : '.',
+	\ 'kind2scope' : {
+		\ 't' : 'ctype',
+		\ 'n' : 'ntype'
+	\ },
+	\ 'scope2kind' : {
+		\ 'ctype' : 't',
+		\ 'ntype' : 'n'
+	\ },
+	\ 'ctagsbin'  : 'gotags',
+	\ 'ctagsargs' : '-sort -silent'
+\ }
 
-""" function! s:go_guru_scope_from_git_root()
-"""   let gitroot = system("git rev-parse --show-toplevel | tr -d '\n'")
-"""   let pattern = escape(go#util#gopath() . "/src/", '\ /')
-"""   return substitute(gitroot, pattern, "", "") . "/... -vendor/"
-""" endfunction
-""" 
-""" au FileType go silent exe "GoGuruScope " . s:go_guru_scope_from_git_root()
+python3 << EOF
+import vim
+import json
+
+gopls_cfg = json.loads("""{
+	"formatting.gofumpt": true,
+	"ui.diagnostic.staticcheck": true,
+	"ui.diagnostic.analyses": {
+		"ST1000": false,
+		"ST1003": false,
+		"SA5001": false,
+		"nilness": true,
+		"unusedwrite": true,
+		"fieldalignment": true,
+		"shadow": false,
+		"composites": false
+	},
+	"ui.codelenses": {
+		"generate": true,
+		"regenerate_cgo": true,
+		"test": true,
+		"vendor": true,
+		"tidy": true,
+		"upgrade_dependency": true,
+		"gc_details": true
+	},
+	"ui.diagnostic.annotations": {
+		"bounds": true,
+		"inline": true,
+		"escape": true,
+		"nil": true
+	},
+
+	"ui.completion.usePlaceholders": true,
+	"ui.navigation.importShortcut": "Definition",
+	"ui.completion.completionBudget": "500ms",
+
+	"build.allowImplicitNetworkAccess": true,
+	"build.directoryFilters": ["-node_modules", "-data"],
+
+	"ui.diagnostic.diagnosticsDelay": "300ms",
+	"ui.completion.experimentalPostfixCompletions": true,
+	"build.experimentalPackageCacheKey": true
+}""")
+EOF
+
+let g:go_gopls_settings = py3eval("gopls_cfg")
+
+function! s:go_guru_scope_from_git_root()
+  let gitroot = system("git rev-parse --show-toplevel | tr -d '\n'")
+  let pattern = escape(go#util#gopath() . "/src/", '\ /')
+  return substitute(gitroot, pattern, "", "") . "/... -vendor/"
+endfunction
+
+au FileType go silent exe "GoGuruScope " . s:go_guru_scope_from_git_root()
 
 """ Neovim specific settings
 """ if has("nvim")
@@ -435,12 +484,12 @@ fun BackgroundToggle()
   elseif g:color_toggle == 1
     set background=dark
     colorscheme papercolor
-    execute "AirlineTheme luna_alt"
+    execute "AirlineTheme luna"
     let g:color_toggle += 1
   elseif g:color_toggle == 2
     set background=dark
     colorscheme onedark
-    execute "AirlineTheme luna_alt"
+    execute "AirlineTheme luna"
     let g:color_toggle = 0
   endif
 endfun
