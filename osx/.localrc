@@ -1,9 +1,0 @@
-export GOPRIVATE="github.com/mailgun"
-
-function pymailgun() {
-  cd ~/code/python/mailgun
-}
-
-function gomailgun() {
-  cd $GOPATH/src/github.com/mailgun/
-}

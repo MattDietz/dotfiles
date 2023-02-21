@@ -89,7 +89,7 @@ EOM
 }
 
 export VISUAL="vim"
-alias dsp="docker system prune -f"
+alias dsp="docker system prune --volumes -f"
 
 # Don't share history between terms, makes tmux less of a PITA
 setopt nosharehistory
