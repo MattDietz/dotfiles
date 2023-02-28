@@ -5,16 +5,12 @@ ARCH="arm64"
 
 export PYENV_ROOT="$HOME/.pyenv"
 export PATH="/opt/homebrew/lib:$PYENV_ROOT/bin:$PATH"
-export VIRTUALENVWRAPPER_SCRIPT=/opt/homebrew/bin/virtualenvwrapper.sh
-source /opt/homebrew/bin/virtualenvwrapper_lazy.sh
 eval "$(pyenv init -)"
 
 export PYENV_VIRTUALENVWRAPPER_PREFER_PYVENV="true"
 pyenv virtualenvwrapper
 PYENV_BIN="$PYENV_ROOT/bin"
 export PYENV_SHELL=zsh
-# export PYENV_ROOT=$(pyenv root)
-# export PYENV_VERSION=$(pyenv version-name)
 export PYTHONPATH=$PYENV_ROOT/shims
 export LIBRARY_PATH="$LIBRARY_PATH:$(brew --prefix)/lib"
 export DYLD_LIBRARY_PATH="$DYLD_LIBRARY_PATH:/opt/homebrew/lib"
@@ -95,3 +91,6 @@ alias dsp="docker system prune --volumes -f"
 setopt nosharehistory
 
 [ -f ~/.localrc ] && source ~/.localrc
+
+# Allow for unlimited core dumps
+ulimit -c unlimited
