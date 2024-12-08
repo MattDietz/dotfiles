@@ -1,0 +1,48 @@
+# Configuration for Alacritty, the GPU enhanced terminal emulator.
+[general]
+import = [
+    "~/.config/alacritty/themes/themes/gruvbox.toml"
+]
+
+# Setup term for programs to be able to use it
+[env]
+  TERM = "alacritty"
+
+[window]
+  # Spread additional padding evenly around the terminal content.
+  dynamic_padding = true
+
+  # Startup Mode (changes require restart)
+  # startup_mode = "fullscreen"
+
+# Sample Font configuration for font: Monoid.
+# Feel free to use different font configuration family & face for each sections
+[font]
+  # Normal font face - Also used to draw glyphs on tmux & VIM
+  # NOTE: You may use any font you'd like but make sure the normal fonts
+  # support ligatures/glyphs. That's used by tmux & VIM to provide a better
+  # UI for powerline & tmux bottom bar.
+  normal = {family = "MesloLGLDZ Nerd Font", style = "Regular"}
+  bold = {family = "MesloLGLDZ Nerd Font", style = "Bold"}
+  italic = {family = "MesloLGLDZ Nerd Font", style = "Italic"}
+  bold_italic = {family = "MesloLGLDZ Nerd Font", style = "Bold Italic"}
+  size = 10
+  #offset = { x = -1, y = 0}
+  #glyph_offset = { x = -1, y = 0 }
+
+
+[selection]
+  semantic_escape_chars = ",│`|:\"' ()[]{}<>\t"
+  save_to_clipboard = false
+
+# Setup some amazing custom key bindings here - Best thing is you can setup key bindings
+# using Mac's 'command' to control your tmux.
+# A great reference: https://arslan.io/2018/02/05/gpu-accelerated-terminal-alacritty/#make-alacritty-feel-like-iterm2
+[keyboard]
+  bindings = [
+    # Disable alacritty search because I'm going to use a terminal mux anyway and I want this key combo to be full screen
+    { key = "F", mods = "Control|Shift", action = "None" }
+  ]
+
+[scrolling]
+  history = 10000

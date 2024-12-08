@@ -16,3 +16,7 @@ Also plugins:
   * OSX: `brew install fzf && $(brew --prefix)/opt/fzf/install`
 * zsh-syntax-highlighting - requires install
   * OSX: `brew install zsh-syntax-highlighting`
+
+# Alacritty
+
+Create ~/.config/alacritty. Clone https://github.com/alacritty/alacritty-theme as alacritty
