@@ -1,7 +1,7 @@
 return {
   -- Window with buffer text overview, scrollbar and highlights
   {
-    "echasnovski/mini.map",
+    "nvim-mini/mini.map",
     event = "LazyFile",
     keys = {
       { "<Leader>m", "<cmd>lua MiniMap.toggle()<CR>", desc = "Mini map" },
