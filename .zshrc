@@ -3,13 +3,13 @@ DISABLE_AUTO_UPDATE="true"
 # export PATH=$HOME/bin:/usr/local/bin:$PATH
 
 # Path to your oh-my-zsh installation.
-export ZSH="$HOME/.oh-my-zsh"
+export ZSH="/Users/MDietz/.oh-my-zsh"
 
 # Set name of the theme to load --- if set to "random", it will
 # load a random theme each time oh-my-zsh is loaded, in which case,
 # to know which specific one was loaded, run: echo $RANDOM_THEME
 # See https://github.com/ohmyzsh/ohmyzsh/wiki/Themes
-ZSH_THEME="dietz" # set by `omz`
+ZSH_THEME="dietz"
 
 # Set list of themes to pick from when loading at random
 # Setting this variable when ZSH_THEME=random will cause zsh to load
@@ -27,7 +27,7 @@ ZSH_THEME="dietz" # set by `omz`
 # Uncomment one of the following lines to change the auto-update behavior
 # zstyle ':omz:update' mode disabled  # disable automatic updates
 # zstyle ':omz:update' mode auto      # update automatically without asking
-zstyle ':omz:update' mode reminder  # just remind me to update when it's time
+# zstyle ':omz:update' mode reminder  # just remind me to update when it's time
 
 # Uncomment the following line to change how often to auto-update (in days).
 # zstyle ':omz:update' frequency 13
@@ -39,7 +39,7 @@ zstyle ':omz:update' mode reminder  # just remind me to update when it's time
 # DISABLE_LS_COLORS="true"
 
 # Uncomment the following line to disable auto-setting terminal title.
-# DISABLE_AUTO_TITLE="true"
+DISABLE_AUTO_TITLE="true"
 
 # Uncomment the following line to enable command auto-correction.
 # ENABLE_CORRECTION="true"
@@ -101,5 +101,54 @@ source $ZSH/oh-my-zsh.sh
 # alias zshconfig="mate ~/.zshrc"
 # alias ohmyzsh="mate ~/.oh-my-zsh"
 
-[ -f "$HOME"/.fzf.zsh ] && source "$HOME".fzf.zsh
-[ -f "$HOME"/.zprofile ] && source "$HOME"/.zprofile
+alias ipython='ptipython'
+alias vim='nvim'
+
+# function vim() {
+#   if test $# -gt 0; then
+#     env nvim "$@"
+#   elif test -f Session.vim; then
+#     env nvim -S
+#   else
+#     env nvim -c Obsession
+#   fi
+# }
+
+function goplay() {
+  cat > ./play.go <<- EOM
+package main
+
+import "fmt"
+
+func main() {
+  fmt.Println("hello!")
+}
+EOM
+}
+alias dsp="docker system prune --volumes -f"
+
+[ -f ~/.localrc ] && source ~/.localrc
+[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
+
+source /opt/homebrew/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
+
+export GOOGLE_APPLICATION_CREDENTIALS=$HOME/.config/gcloud/application_default_credentials.json
+unsetopt autocd
+
+# The next line updates PATH for the Google Cloud SDK.
+if [ -f '/Users/MDietz/Downloads/google-cloud-sdk/path.zsh.inc' ]; then . '/Users/MDietz/Downloads/google-cloud-sdk/path.zsh.inc'; fi
+
+# The next line enables shell command completion for gcloud.
+if [ -f '/Users/MDietz/Downloads/google-cloud-sdk/completion.zsh.inc' ]; then . '/Users/MDietz/Downloads/google-cloud-sdk/completion.zsh.inc'; fi
+
+# opencode
+export PATH=/Users/matdie/.opencode/bin:$PATH
+
+export PYENV_ROOT="$HOME/.pyenv"
+export PATH="/opt/homebrew/lib:$PYENV_ROOT/bin:$PATH"
+eval "$(pyenv init -)"
+
+export PYENV_VIRTUALENVWRAPPER_PREFER_PYVENV="true"
+pyenv virtualenvwrapper
+PYENV_BIN="$PYENV_ROOT/bin"
+export PYENV_SHELL=zsh
