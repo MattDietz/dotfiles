@@ -15,6 +15,9 @@ return {
           parameterNames = true,
           rangeVariableTypes = true,
         },
+        diagnostics = {
+          maxDiagnosticsPerFile = 50,
+        },
       },
     },
   },

@@ -1,2 +1,6 @@
 Session.vim
 *.old
+.DS_Store
+.vim/.gitignore
+.vim/.netrwhist
+.vim/.undo/
