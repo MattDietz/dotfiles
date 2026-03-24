@@ -250,7 +250,7 @@ keybinds clear-defaults=true {
         bind "A" { SwitchToMode "renametab"; }
         bind "[" { SwitchToMode "scroll"; }
         bind "a" { GoToPreviousTab; SwitchToMode "normal"; }
-        bind "Ctrl a" { GoToPreviousTab; SwitchToMode "normal"; }
+        bind "Ctrl a" { ToggleTab; SwitchToMode "normal"; }
         bind "c" { NewTab; SwitchToMode "normal"; }
         bind "h" { MoveFocus "left"; SwitchToMode "normal"; }
         bind "j" { MoveFocus "down"; SwitchToMode "normal"; }
