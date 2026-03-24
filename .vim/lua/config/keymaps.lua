@@ -16,3 +16,18 @@ vim.keymap.del({ "n", "v" }, "<C-b>")
 vim.keymap.set({ "n", "v" }, "<C-b>", function()
   require("neo-tree.command").execute({ toggle = true, dir = LazyVim.root() })
 end, { desc = "Explorer NeoTree (Root Dir)" })
+
+-- yank to system clipboard
+vim.keymap.set({ "n", "v" }, "<leader>y", '"+y')
+vim.keymap.set("n", "<leader>Y", '"+Y')
+
+-- delete/cut to system clipboard
+vim.keymap.set({ "n", "v" }, "<leader>d", '"+d')
+vim.keymap.set({ "n", "v" }, "<leader>x", '"+x')
+
+-- paste from system clipboard
+vim.keymap.set({ "n", "v" }, "<leader>p", '"+p')
+vim.keymap.set({ "n", "v" }, "<leader>P", '"+P')
+
+-- Don't yank the think I'm pasting over
+vim.keymap.set("v", "p", '"_dP')

@@ -5,18 +5,22 @@ return {
       enabled = false,
     },
     servers = {
-      gopls = {
-        hints = {
-          assignVariableTypes = true,
-          compositeLiteralFields = true,
-          compositeLiteralTypes = true,
-          constantValues = true,
-          functionTypeParameters = true,
-          parameterNames = true,
-          rangeVariableTypes = true,
-        },
-        diagnostics = {
-          maxDiagnosticsPerFile = 50,
+      settings = {
+        gopls = {
+          gofumpt = true,
+          hints = {
+            assignVariableTypes = true,
+            compositeLiteralFields = true,
+            compositeLiteralTypes = true,
+            constantValues = true,
+            functionTypeParameters = true,
+            parameterNames = true,
+            rangeVariableTypes = true,
+          },
+          diagnostics = {
+            maxDiagnosticsPerFile = 50,
+          },
+          diagnosticsDelay = "500ms",
         },
       },
     },
