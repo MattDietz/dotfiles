@@ -2,7 +2,7 @@ return {
   "snacks.nvim",
   opts = {
     indent = {
-      enabled = true,
+      enabled = false,
     },
     scroll = {
       enabled = false,

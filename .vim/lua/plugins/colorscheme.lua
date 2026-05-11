@@ -8,6 +8,7 @@ return {
     config = function(plugin)
       vim.opt.rtp:append(plugin.dir .. "/packages/neovim")
       vim.cmd([[colorscheme aura-dark]])
+      vim.api.nvim_set_hl(0, "MatchParen", { fg = "#15141b", bg = "#e3b388", bold = true }) -- Previous MatchParen color was setting it to black, effectively disabling it
     end,
   },
   -- Configure LazyVim to load gruvbox
