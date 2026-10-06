@@ -40,6 +40,23 @@ return {
       local minimap = require("mini.map")
       minimap.setup(opts)
       minimap.open()
+
+      -- mini.map keeps one window per tabpage and has no built-in autocmd for
+      -- new ones, so mirror the current state into every newly created tab.
+      local group = vim.api.nvim_create_augroup("MiniMapNewTab", { clear = true })
+      vim.api.nvim_create_autocmd("TabNewEntered", {
+        group = group,
+        callback = function()
+          for _, tabpage in ipairs(vim.api.nvim_list_tabpages()) do
+            local win = minimap.current.win_data[tabpage]
+            if win ~= nil and vim.api.nvim_win_is_valid(win) then
+              minimap.open()
+              return
+            end
+          end
+        end,
+        desc = "Open mini.map in new tabpage",
+      })
     end,
   },
 }
